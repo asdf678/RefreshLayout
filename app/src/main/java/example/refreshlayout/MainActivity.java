@@ -4,12 +4,17 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import example.refreshlayout.style.StyleFragment;
+import example.refreshlayout.style.ui.StyleBaseFragment;
+import example.refreshlayout.style.ui.StyleTJFragment;
 import example.refreshlayout.test.TestFragment;
 import example.refreshlayout.test.ui.TestListViewFragment;
 import example.refreshlayout.test.ui.TestNestedViewFragment;
 import example.refreshlayout.test.ui.TestRecyclerViewFragment;
 import example.refreshlayout.test.ui.TestScrollViewFragment;
 import example.refreshlayout.test.ui.TestWebViewFragment;
+import example.refreshlayout.usage.UsageFragment;
+import example.refreshlayout.usage.ui.UsageMDFragment;
 import example.refreshlayout.util.Utils;
 
 
@@ -83,11 +88,32 @@ public class MainActivity extends AppCompatActivity implements Navigator {
 
     @Override
     public void navigateStyle() {
+        Utils.replaceFragment(getSupportFragmentManager(), StyleFragment.class, R.id.container, null);
+
+
+    }
+
+    @Override
+    public void navigateStyleBase() {
+        Utils.replaceFragment(getSupportFragmentManager(), StyleBaseFragment.class, R.id.container, null);
+
+    }
+
+    @Override
+    public void navigateStyleTJ() {
+        Utils.replaceFragment(getSupportFragmentManager(), StyleTJFragment.class, R.id.container, null);
 
     }
 
     @Override
     public void navigateUsage() {
+        Utils.replaceFragment(getSupportFragmentManager(), UsageFragment.class, R.id.container, null);
+
+    }
+
+    @Override
+    public void navigateUsageMD() {
+        Utils.replaceFragment(getSupportFragmentManager(), UsageMDFragment.class, R.id.container, null);
 
     }
 }

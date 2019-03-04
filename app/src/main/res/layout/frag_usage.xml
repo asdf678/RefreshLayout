@@ -5,16 +5,14 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/btn_base"
+        android:id="@+id/btn_md"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="基础" />
+        android:text="Material Design"
+        android:textAllCaps="false"
+        />
 
-    <Button
-        android:id="@+id/btn_tj"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="太极" />
+
 
 
 </LinearLayout>

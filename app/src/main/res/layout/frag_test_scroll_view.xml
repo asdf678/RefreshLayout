@@ -11,7 +11,21 @@
         <ScrollView
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent" >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="长得帅其实一点用都没有用；除了长得帅点，好像没有什么缺点了。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。"
+                    android:textSize="60dp" />
+
+            </LinearLayout>
+
+        </ScrollView>
 
     </tzy.refreshlayout.MyRefreshLayout>
 

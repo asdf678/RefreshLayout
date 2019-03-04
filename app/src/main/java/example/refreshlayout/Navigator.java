@@ -11,7 +11,12 @@ public interface Navigator {
 
 
     void navigateStyle();
+    void navigateStyleBase();
+    void navigateStyleTJ();
+
+
     void navigateUsage();
+    void navigateUsageMD();
 
 
 

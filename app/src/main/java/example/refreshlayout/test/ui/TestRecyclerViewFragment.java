@@ -30,14 +30,20 @@ public class TestRecyclerViewFragment extends Fragment implements Handler.Callba
         mHandler = new Handler(this);
     }
 
+    @Override
+    public void onDestroy() {
+        mHandler.removeCallbacksAndMessages(null);
+        super.onDestroy();
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.frag_test_recyclerview, container, false);
     }
 
-    RecyclerView mRecyclerView;
-    MyRefreshLayout mMyRefreshLayout;
+    protected RecyclerView mRecyclerView;
+     protected MyRefreshLayout mMyRefreshLayout;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
