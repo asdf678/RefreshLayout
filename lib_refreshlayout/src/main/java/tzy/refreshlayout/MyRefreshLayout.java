@@ -20,7 +20,9 @@ import android.widget.ListView;
 import android.widget.OverScroller;
 import android.widget.ProgressBar;
 
+import tzy.refreshlayout.footer.BaseRefreshFooterView;
 import tzy.refreshlayout.footer.MyRefreshFooterView2;
+import tzy.refreshlayout.header.BaseRefreshHeaderView2;
 import tzy.refreshlayout.header.MyRefreshHeaderView2;
 import tzy.refreshlayout.scrolltarget.RecyclerViewScrollTarget;
 import tzy.refreshlayout.status.SimpleStatusView;
@@ -508,7 +510,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
 //        if (Math.abs(yDiff) > mTouchSlop && !mIsBeingDragged) {
 //
-//        }
+//        }onFinishLoading
 
     }
 
@@ -932,25 +934,38 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
     }
 
-//    @Override
+    //    @Override
 //    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
 //        if (disallowIntercept) {
 //            recycleVelocityTracker();
 //        }
 //        super.requestDisallowInterceptTouchEvent(disallowIntercept);
 //    }
+    public void setRefreshHeader(MyRefreshHeader2 header) {
+        removeView((View) mHeaderProgress);
+        mHeaderProgress = header;
+        addView((View) mHeaderProgress);
+    }
+
+    public void setRefreshFooter(MyRefreshFooter2 footer) {
+        removeView((View) mFooterProgress);
+        mFooterProgress = footer;
+        addView((View) mFooterProgress);
+
+
+    }
 
 
     protected void createFooterProgress() {
         if (mFooterProgress == null) {
-            mFooterProgress = new MyRefreshFooterView2(getContext());
+            mFooterProgress = new BaseRefreshFooterView(getContext());
             ((View) mFooterProgress).setVisibility(View.GONE);
         }
     }
 
     protected void createHeaderProgress() {
         if (mHeaderProgress == null) {
-            mHeaderProgress = new MyRefreshHeaderView2(getContext());
+            mHeaderProgress = new BaseRefreshHeaderView2(getContext());
             ((View) mHeaderProgress).setVisibility(View.GONE);
         }
     }
