@@ -491,14 +491,14 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
                 if (Math.abs(yDiff) > mTouchSlop) {
                     mInitialMotionY = mInitialDownY + mTouchSlop;
                     mIsBeingDragged = true;
-                    mLastDraggedScrollY = mScrollY;
+                    mLastDraggedScrollY = -1;
 
                 }
             } else if (yDiff < 0 && !canChildScrollDown()) {
                 if (Math.abs(yDiff) > mTouchSlop) {
                     mInitialMotionY = mInitialDownY - mTouchSlop;
                     mIsBeingDragged = true;
-                    mLastDraggedScrollY = mScrollY;
+                    mLastDraggedScrollY = 1;
                 }
             } else {
                 mInitialDownY = y;
