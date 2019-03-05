@@ -17,6 +17,7 @@ import java.util.List;
 
 import example.refreshlayout.R;
 import tzy.refreshlayout.MyRefreshLayout;
+import tzy.refreshlayout.OnRefreshLoadListener;
 
 public class TestRecyclerViewFragment extends Fragment implements Handler.Callback {
     Handler mHandler;
@@ -52,7 +53,7 @@ public class TestRecyclerViewFragment extends Fragment implements Handler.Callba
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setAdapter(new Adapter());
-        mMyRefreshLayout.setOnRefreshLoadListener(new MyRefreshLayout.OnRefreshLoadListener() {
+        mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
             public void onProgressRefresh(MyRefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);

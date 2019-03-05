@@ -30,7 +30,7 @@ import tzy.refreshlayout.status.SimpleStatusView;
 /**
  *
  */
-public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2, NestedScrollingChild2, StatusView {
+public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2, NestedScrollingChild2, StatusView ,RefreshView{
     public static final int REFRESH_TYPE_TOUCH_UP = 0;
     public static final int REFRESH_TYPE_SCROLLING = 1;
 
@@ -681,6 +681,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
         startProgressRefreshing(false);
     }
 
+    @Override
     public void startProgressRefreshing(boolean notify) {
 
 
@@ -741,7 +742,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
     }
 
-
+    @Override
     public void setRefreshEnabled(boolean enabled) {
         if (enabled) {
             mFlags &= ~FLAG_REFRESHING_DISABLE;
@@ -751,6 +752,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
         }
     }
 
+    @Override
     public void setLoadEnabled(boolean enabled) {
         if (enabled) {
             mFlags &= ~FLAG_LOADING_DISABLE;
@@ -760,14 +762,17 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
     }
 
+    @Override
     public boolean isLoading() {
         return (mFlags & FLAG_LOADING) != 0;
     }
 
+    @Override
     public boolean isRefreshing() {
         return (mFlags & FLAG_REFRESHING) != 0;
     }
 
+    @Override
     public boolean isProgressRefreshing() {
         return (mFlags & FLAG_PROGRESS_REFRESHING) != 0;
     }
@@ -941,12 +946,14 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 //        }
 //        super.requestDisallowInterceptTouchEvent(disallowIntercept);
 //    }
+    @Override
     public void setRefreshHeader(MyRefreshHeader2 header) {
         removeView((View) mHeaderProgress);
         mHeaderProgress = header;
         addView((View) mHeaderProgress);
     }
 
+    @Override
     public void setRefreshFooter(MyRefreshFooter2 footer) {
         removeView((View) mFooterProgress);
         mFooterProgress = footer;
@@ -1555,6 +1562,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
         }
     }
 
+    @Override
     public void stopRefreshing() {
         if ((mFlags & FLAG_REFRESHING) != 0) {
             mFlags ^= FLAG_REFRESHING;
@@ -1604,6 +1612,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
     }
 
+    @Override
     public void stopLoading() {
         if ((mFlags & FLAG_LOADING) != 0) {
             mFlags ^= FLAG_LOADING;//mFlags &= ~FLAG_LOADING
@@ -1740,20 +1749,15 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     };
 
 
+    @Override
     public void setOnRefreshLoadListener(OnRefreshLoadListener listener) {
         mRefreshLoadListener = listener;
     }
 
-    public interface OnRefreshLoadListener {
-        void onProgressRefresh(MyRefreshLayout view);
-
-        void onRefresh(MyRefreshLayout view);
-
-        void onLoading(MyRefreshLayout view);
-    }
 
     private ScrollTarget mScrollTarget;
 
+    @Override
     public void setScrollTarget(ScrollTarget scrollTarget) {
         mScrollTarget = scrollTarget;
     }

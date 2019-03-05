@@ -18,6 +18,7 @@ import java.util.List;
 
 import example.refreshlayout.R;
 import tzy.refreshlayout.MyRefreshLayout;
+import tzy.refreshlayout.OnRefreshLoadListener;
 
 public class TestListViewFragment extends Fragment implements Handler.Callback {
     Handler mHandler;
@@ -51,7 +52,7 @@ public class TestListViewFragment extends Fragment implements Handler.Callback {
         mListView = view.findViewById(R.id.list_view);
         mListView.setAdapter(new Adapter());
         mMyRefreshLayout = view.findViewById(R.id.refresh_layout);
-        mMyRefreshLayout.setOnRefreshLoadListener(new MyRefreshLayout.OnRefreshLoadListener() {
+        mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
             public void onProgressRefresh(MyRefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);

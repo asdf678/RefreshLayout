@@ -11,6 +11,7 @@ import android.webkit.WebViewClient;
 
 import example.refreshlayout.R;
 import tzy.refreshlayout.MyRefreshLayout;
+import tzy.refreshlayout.OnRefreshLoadListener;
 
 public class TestWebViewFragment extends Fragment {
     MyRefreshLayout mMyRefreshLayout;
@@ -40,7 +41,7 @@ public class TestWebViewFragment extends Fragment {
 //        mWebView.loadUrl("https//:www.baidu.com/");
 
 
-        mMyRefreshLayout.setOnRefreshLoadListener(new MyRefreshLayout.OnRefreshLoadListener() {
+        mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
             public void onProgressRefresh(MyRefreshLayout view) {
                 mWebView.loadUrl("http://baidu.com");
