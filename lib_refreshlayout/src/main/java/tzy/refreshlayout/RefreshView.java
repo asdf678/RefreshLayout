@@ -20,7 +20,7 @@ public interface RefreshView {
 
     boolean isRefreshing();
 
-    void setScrollTarget(ScrollTarget scrollTarget);
+    void setScrollTarget(Scroller scrollTarget);
 
     void setOnRefreshLoadListener(OnRefreshLoadListener listener);
 

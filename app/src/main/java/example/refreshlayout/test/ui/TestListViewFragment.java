@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import example.refreshlayout.R;
-import tzy.refreshlayout.MyRefreshLayout;
+import tzy.refreshlayout.RefreshLayout;
 import tzy.refreshlayout.OnRefreshLoadListener;
 
 public class TestListViewFragment extends Fragment implements Handler.Callback {
@@ -38,7 +37,7 @@ public class TestListViewFragment extends Fragment implements Handler.Callback {
     }
 
     ListView mListView;
-    MyRefreshLayout mMyRefreshLayout;
+    RefreshLayout mMyRefreshLayout;
 
     @Nullable
     @Override
@@ -54,18 +53,18 @@ public class TestListViewFragment extends Fragment implements Handler.Callback {
         mMyRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
-            public void onProgressRefresh(MyRefreshLayout view) {
+            public void onProgressRefresh(RefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);
             }
 
             @Override
-            public void onRefresh(MyRefreshLayout view) {
+            public void onRefresh(RefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);
 
             }
 
             @Override
-            public void onLoading(MyRefreshLayout view) {
+            public void onLoading(RefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_LOAD, 1000);
 
             }

@@ -2,7 +2,7 @@ package tzy.refreshlayout;
 
 import android.view.View;
 
-public interface ScrollTarget<T> {
+public interface Scroller<T> {
     T ensureTargetScrollChild(View target);
 
     void scrollBy(int dy);

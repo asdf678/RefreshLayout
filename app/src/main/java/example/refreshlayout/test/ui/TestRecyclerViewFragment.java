@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import example.refreshlayout.R;
-import tzy.refreshlayout.MyRefreshLayout;
+import tzy.refreshlayout.RefreshLayout;
 import tzy.refreshlayout.OnRefreshLoadListener;
 
 public class TestRecyclerViewFragment extends Fragment implements Handler.Callback {
@@ -44,7 +44,7 @@ public class TestRecyclerViewFragment extends Fragment implements Handler.Callba
     }
 
     protected RecyclerView mRecyclerView;
-     protected MyRefreshLayout mMyRefreshLayout;
+     protected RefreshLayout mMyRefreshLayout;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -55,18 +55,18 @@ public class TestRecyclerViewFragment extends Fragment implements Handler.Callba
         mRecyclerView.setAdapter(new Adapter());
         mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
-            public void onProgressRefresh(MyRefreshLayout view) {
+            public void onProgressRefresh(RefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);
             }
 
             @Override
-            public void onRefresh(MyRefreshLayout view) {
+            public void onRefresh(RefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);
 
             }
 
             @Override
-            public void onLoading(MyRefreshLayout view) {
+            public void onLoading(RefreshLayout view) {
                 mHandler.sendEmptyMessageDelayed(MSG_LOAD, 1000);
 
             }

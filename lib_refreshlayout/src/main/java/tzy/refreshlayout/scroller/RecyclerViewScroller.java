@@ -1,16 +1,16 @@
-package tzy.refreshlayout.scrolltarget;
+package tzy.refreshlayout.scroller;
 
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import tzy.refreshlayout.ScrollTarget;
+import tzy.refreshlayout.Scroller;
 
-public class RecyclerViewScrollTarget implements ScrollTarget<RecyclerView> {
+public class RecyclerViewScroller implements Scroller<RecyclerView> {
     final RecyclerView mRecyclerView;
 
 
-    public RecyclerViewScrollTarget(View target) {
+    public RecyclerViewScroller(View target) {
         mRecyclerView = target instanceof RecyclerView && ViewCompat.isNestedScrollingEnabled(target) ? (RecyclerView) target : null;
     }
 

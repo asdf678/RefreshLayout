@@ -10,11 +10,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import example.refreshlayout.R;
-import tzy.refreshlayout.MyRefreshLayout;
+import tzy.refreshlayout.RefreshLayout;
 import tzy.refreshlayout.OnRefreshLoadListener;
 
 public class TestWebViewFragment extends Fragment {
-    MyRefreshLayout mMyRefreshLayout;
+    RefreshLayout mMyRefreshLayout;
     WebView mWebView;
 
     @Nullable
@@ -43,20 +43,20 @@ public class TestWebViewFragment extends Fragment {
 
         mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
-            public void onProgressRefresh(MyRefreshLayout view) {
+            public void onProgressRefresh(RefreshLayout view) {
                 mWebView.loadUrl("http://baidu.com");
                 view.stopRefreshing();
             }
 
             @Override
-            public void onRefresh(MyRefreshLayout view) {
+            public void onRefresh(RefreshLayout view) {
                 mWebView.reload();
                 view.stopRefreshing();
 
             }
 
             @Override
-            public void onLoading(MyRefreshLayout view) {
+            public void onLoading(RefreshLayout view) {
 
             }
         });

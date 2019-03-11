@@ -21,16 +21,14 @@ import android.widget.OverScroller;
 import android.widget.ProgressBar;
 
 import tzy.refreshlayout.footer.BaseRefreshFooterView;
-import tzy.refreshlayout.footer.MyRefreshFooterView2;
 import tzy.refreshlayout.header.BaseRefreshHeaderView2;
-import tzy.refreshlayout.header.MyRefreshHeaderView2;
-import tzy.refreshlayout.scrolltarget.RecyclerViewScrollTarget;
+import tzy.refreshlayout.scroller.RecyclerViewScroller;
 import tzy.refreshlayout.status.SimpleStatusView;
 
 /**
  *
  */
-public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2, NestedScrollingChild2, StatusView ,RefreshView{
+public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, NestedScrollingChild2, StatusView, RefreshView {
     public static final int REFRESH_TYPE_TOUCH_UP = 0;
     public static final int REFRESH_TYPE_SCROLLING = 1;
 
@@ -98,15 +96,15 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
     public static final long DELAY_CALLBACK_TIME = 500;
 
-    public MyRefreshLayout(Context context) {
+    public RefreshLayout(Context context) {
         this(context, null);
     }
 
-    public MyRefreshLayout(Context context, AttributeSet attrs) {
+    public RefreshLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public MyRefreshLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+    public RefreshLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initScrollView();
         mParentHelper = new NestedScrollingParentHelper(this);
@@ -125,10 +123,10 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
         final float density = getContext().getResources().getDisplayMetrics().density;
         mOverscrollDistance = (int) (density * OVER_SCROLL_DISTANCE);
         mOverflingDistance = (int) (density * OVER_FLING_DISTANCE);
-        createHeaderProgress();
-        createFooterProgress();
-        createProgress();
-        createStatusView();
+        mHeaderProgress = createHeaderProgress();
+        mFooterProgress = createFooterProgress();
+        mProgress = createProgress();
+        mStatusView = createStatusView();
         addView((View) mHeaderProgress);
         addView((View) mFooterProgress);
         addView((View) mStatusView);
@@ -833,7 +831,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
 
 
                 }
-                ViewCompat.postOnAnimation(MyRefreshLayout.this, this);
+                ViewCompat.postOnAnimation(RefreshLayout.this, this);
             }
         }
 
@@ -873,7 +871,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
         void scrollBy(int dy) {
             removeCallbacks(this);
             mScroller.startScroll(0, mScrollY, 0, dy);
-            ViewCompat.postOnAnimation(MyRefreshLayout.this, this);
+            ViewCompat.postOnAnimation(RefreshLayout.this, this);
 
         }
 
@@ -963,32 +961,28 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     }
 
 
-    protected void createFooterProgress() {
-        if (mFooterProgress == null) {
-            mFooterProgress = new BaseRefreshFooterView(getContext());
-            ((View) mFooterProgress).setVisibility(View.GONE);
-        }
+    protected MyRefreshFooter2 createFooterProgress() {
+        MyRefreshFooter2 v = new BaseRefreshFooterView(getContext());
+        ((View) v).setVisibility(View.GONE);
+        return v;
     }
 
-    protected void createHeaderProgress() {
-        if (mHeaderProgress == null) {
-            mHeaderProgress = new BaseRefreshHeaderView2(getContext());
-            ((View) mHeaderProgress).setVisibility(View.GONE);
-        }
+    protected MyRefreshHeader2 createHeaderProgress() {
+        final MyRefreshHeader2 v = new BaseRefreshHeaderView2(getContext());
+        ((View) v).setVisibility(View.GONE);
+        return v;
     }
 
-    protected void createProgress() {
-        if (mProgress == null) {
-            mProgress = new ProgressBar(getContext());
-            mProgress.setVisibility(GONE);
-        }
+    protected View createProgress() {
+        View v = new ProgressBar(getContext());
+        v.setVisibility(GONE);
+        return v;
     }
 
-    protected void createStatusView() {
-        if (mStatusView == null) {
-            mStatusView = new SimpleStatusView(getContext());
-            mStatusView.hideStatusView();
-        }
+    protected StatusView createStatusView() {
+        StatusView v = new SimpleStatusView(getContext());
+        v.hideStatusView();
+        return v;
     }
 
 
@@ -1011,8 +1005,8 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
         }
     }
 
-    protected ScrollTarget generateScrollTarget(View target) {
-        return new RecyclerViewScrollTarget(target);
+    protected Scroller generateScrollTarget(View target) {
+        return new RecyclerViewScroller(target);
     }
 
     @Override
@@ -1670,11 +1664,11 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     }
 
     public interface OnChildScrollUpCallback {
-        boolean canChildScrollUp(MyRefreshLayout parent, @Nullable View child);
+        boolean canChildScrollUp(RefreshLayout parent, @Nullable View child);
     }
 
     public interface OnChildScrollDownCallback {
-        boolean canChildScrollDown(MyRefreshLayout parent, @Nullable View child);
+        boolean canChildScrollDown(RefreshLayout parent, @Nullable View child);
     }
 
     public boolean canChildScrollUp() {
@@ -1715,7 +1709,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     private final Runnable mLoadingCallbackRunnable = new Runnable() {
         @Override
         public void run() {
-            mRefreshLoadListener.onLoading(MyRefreshLayout.this);
+            mRefreshLoadListener.onLoading(RefreshLayout.this);
         }
     };
 
@@ -1730,7 +1724,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     private final Runnable mRefreshCallbackRunnable = new Runnable() {
         @Override
         public void run() {
-            mRefreshLoadListener.onRefresh(MyRefreshLayout.this);
+            mRefreshLoadListener.onRefresh(RefreshLayout.this);
 
         }
     };
@@ -1744,7 +1738,7 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     private final Runnable mProgressRefreshCallbackRunnable = new Runnable() {
         @Override
         public void run() {
-            mRefreshLoadListener.onProgressRefresh(MyRefreshLayout.this);
+            mRefreshLoadListener.onProgressRefresh(RefreshLayout.this);
         }
     };
 
@@ -1755,10 +1749,10 @@ public class MyRefreshLayout extends ViewGroup implements NestedScrollingParent2
     }
 
 
-    private ScrollTarget mScrollTarget;
+    private Scroller mScrollTarget;
 
     @Override
-    public void setScrollTarget(ScrollTarget scrollTarget) {
+    public void setScrollTarget(Scroller scrollTarget) {
         mScrollTarget = scrollTarget;
     }
 }

@@ -1,25 +1,21 @@
 package tzy.refreshlayout.header;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import tzy.refreshlayout.MyRefreshHeader2;
-import tzy.refreshlayout.MyRefreshLayout;
-import tzy.refreshlayout.R;
-import tzy.refreshlayout.ScrollTarget;
+import tzy.refreshlayout.RefreshLayout;
+import tzy.refreshlayout.Scroller;
 
 /**
  * Created by Administrator on 2018/3/21.
@@ -64,7 +60,7 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
 
 
     @Override
-    public boolean onMeasure(MyRefreshLayout parent, int parentWidthMeasureSpec, int parentHeightMeasureSpec) {
+    public boolean onMeasure(RefreshLayout parent, int parentWidthMeasureSpec, int parentHeightMeasureSpec) {
 
         measure(MeasureSpec.makeMeasureSpec(parent.getMeasuredWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(parent.getMeasuredHeight() - parent.getPaddingTop() - parent.getPaddingBottom(), MeasureSpec.AT_MOST));
@@ -73,7 +69,7 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
     }
 
     @Override
-    public boolean onLayout(MyRefreshLayout parent, int scrollY, int targetLeft, int targetTop, int targetRight, int targetBottom, int targetWidget, int targetHeight) {
+    public boolean onLayout(RefreshLayout parent, int scrollY, int targetLeft, int targetTop, int targetRight, int targetBottom, int targetWidget, int targetHeight) {
         final View headerView = this;
         final int headerLeft = parent.getPaddingLeft();
         final int headerTop = parent.getPaddingTop() - headerView.getMeasuredHeight() - scrollY;
@@ -83,13 +79,13 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
     }
 
     @Override
-    public void onScrolling(MyRefreshLayout parent, int distance, int deltaY, boolean visible, boolean backScrolling) {
+    public void onScrolling(RefreshLayout parent, int distance, int deltaY, boolean visible, boolean backScrolling) {
         parent.offsetChildren(this, -deltaY);
     }
 
     @Override
-    public boolean onStartRefreshing(ScrollTarget scrollTarget, int distance, int overScrollRange, int type) {
-        if (distance <= overScrollRange && type == MyRefreshLayout.REFRESH_TYPE_TOUCH_UP) {
+    public boolean onStartRefreshing(Scroller scrollTarget, int distance, int overScrollRange, int type) {
+        if (distance <= overScrollRange && type == RefreshLayout.REFRESH_TYPE_TOUCH_UP) {
             return true;
         }
         return false;
@@ -113,7 +109,7 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
     public void onRefreshingNotAccepted(int distance, int overScrollRange, int type) {
         if (distance > overScrollRange) {
             mTextView.setText("下拉后刷新");
-        } else if (type == MyRefreshLayout.REFRESH_TYPE_SCROLLING) {
+        } else if (type == RefreshLayout.REFRESH_TYPE_SCROLLING) {
             mTextView.setText("松开后刷新");
 
         }
@@ -123,7 +119,7 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
 
 
     @Override
-    public boolean onFinishRefreshing(ScrollTarget scrollTarget, int distance) {
+    public boolean onFinishRefreshing(Scroller scrollTarget, int distance) {
         mTextView.setText("刷新完成");
 
         return false;

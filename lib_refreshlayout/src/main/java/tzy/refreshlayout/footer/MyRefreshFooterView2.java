@@ -14,8 +14,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import tzy.refreshlayout.MyRefreshFooter2;
-import tzy.refreshlayout.MyRefreshLayout;
-import tzy.refreshlayout.ScrollTarget;
+import tzy.refreshlayout.RefreshLayout;
+import tzy.refreshlayout.Scroller;
 
 /**
  * Created by Administrator on 2018/3/21.
@@ -59,14 +59,14 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
 
 
     @Override
-    public boolean onMeasure(MyRefreshLayout parent, int parentWidthMeasureSpec, int parentHeightMeasureSpec) {
+    public boolean onMeasure(RefreshLayout parent, int parentWidthMeasureSpec, int parentHeightMeasureSpec) {
         measure(MeasureSpec.makeMeasureSpec(parent.getMeasuredWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(parent.getMeasuredHeight() - parent.getPaddingTop() - parent.getPaddingBottom(), MeasureSpec.AT_MOST));
         return true;
     }
 
     @Override
-    public boolean onLayout(MyRefreshLayout parent, int scrollY, int targetLeft, int targetTop, int targetRight, int targetBottom, int targetWidget, int targetHeight) {
+    public boolean onLayout(RefreshLayout parent, int scrollY, int targetLeft, int targetTop, int targetRight, int targetBottom, int targetWidget, int targetHeight) {
         final View footerView = this;
         final int footerLeft = parent.getPaddingLeft();
         final int footerTop = parent.getMeasuredHeight() - parent.getPaddingBottom() - scrollY;
@@ -76,7 +76,7 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
     }
 
     @Override
-    public void onScrolling(MyRefreshLayout parent, int distance, int deltaY, boolean visible, boolean backScrolling) {
+    public void onScrolling(RefreshLayout parent, int distance, int deltaY, boolean visible, boolean backScrolling) {
         parent.offsetChildren(this, -deltaY);
     }
 
@@ -92,13 +92,13 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
     }
 
     @Override
-    public boolean onStartLoading(ScrollTarget scrollTarget, int distance, int overScrollRange, int type) {
+    public boolean onStartLoading(Scroller scrollTarget, int distance, int overScrollRange, int type) {
 
         if (scrollTarget.isScrollSupported()) {
-            return distance > 0 && type == MyRefreshLayout.REFRESH_TYPE_SCROLLING;
+            return distance > 0 && type == RefreshLayout.REFRESH_TYPE_SCROLLING;
 
         } else {
-            return distance >= overScrollRange && type == MyRefreshLayout.REFRESH_TYPE_TOUCH_UP;
+            return distance >= overScrollRange && type == RefreshLayout.REFRESH_TYPE_TOUCH_UP;
         }
 
     }
@@ -110,7 +110,7 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
     }
 
     @Override
-    public boolean onFinishLoading(ScrollTarget scrollTarget, int distance) {
+    public boolean onFinishLoading(Scroller scrollTarget, int distance) {
         mTextView.setText("加载完成");
         if (scrollTarget.isScrollSupported()) {
             if (distance > 0) {

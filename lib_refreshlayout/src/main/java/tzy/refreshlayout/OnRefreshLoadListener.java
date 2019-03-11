@@ -1,9 +1,9 @@
 package tzy.refreshlayout;
 
 public interface OnRefreshLoadListener {
-    void onProgressRefresh(MyRefreshLayout view);
+    void onProgressRefresh(RefreshLayout view);
 
-    void onRefresh(MyRefreshLayout view);
+    void onRefresh(RefreshLayout view);
 
-    void onLoading(MyRefreshLayout view);
+    void onLoading(RefreshLayout view);
 }
