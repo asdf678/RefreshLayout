@@ -32,36 +32,32 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     public static final int REFRESH_TYPE_TOUCH_UP = 0;
     public static final int REFRESH_TYPE_SCROLLING = 1;
 
-//    static final int TOUCH_DRAGGED_SCROLLING = 0;
-//    static final int TOUCH_DRAGGED_REFRESHING = -1;
-//    static final int TOUCH_DRAGGED_LOADING = 1;
-//    int mDraggedStatus = TOUCH_DRAGGED_SCROLLING;
+    static final int FLAG_REFRESHING = 0x01;//是否正在刷新
+    static final int FLAG_REFRESHING_DISABLE = 0x02;//是否关闭刷新功能
+    static final int FLAG_FINISHED_REFRESHING = 0x04;//是否完成刷新
+    static final int FLAG_LOADING = 0x08;//是否正在加载
+    static final int FLAG_LOADING_DISABLE = 0x10;//是否关闭加载功能
+    static final int FLAG_FINISHED_LOADING = 0x20;//是否完成加载
 
-    //    static final int FLAG_FREE = 0;
-    static final int FLAG_REFRESHING = 0x01;
-    static final int FLAG_REFRESHING_DISABLE = 0x02;
-    //    static final int FLAG_FINISHED_REFRESHING = FLAG_REFRESHING | FLAG_REFRESHING_DISABLE;
-    static final int FLAG_FINISHED_REFRESHING = 0x04;
-    static final int FLAG_LOADING = 0x08;
-    static final int FLAG_LOADING_DISABLE = 0x10;
-    //    static final int FLAG_FINISHED_LOADING = FLAG_LOADING | FLAG_LOADING_DISABLE;
-    static final int FLAG_FINISHED_LOADING = 0x20;
+    static final int FLAG_PROGRESS_REFRESHING = 0x40;//是否正在刷新（进度条）
 
-    static final int FLAG_PROGRESS_REFRESHING = 0x40;
-
+    /**
+     * 不允许刷新
+     * */
     static final int MASK_DISALLOW_REFRESHING = FLAG_REFRESHING | FLAG_REFRESHING_DISABLE | FLAG_LOADING | FLAG_FINISHED_REFRESHING | FLAG_PROGRESS_REFRESHING;
+
+    /**
+     * 不允许加载
+     * */
     static final int MASK_DISALLOW_LOADING = FLAG_LOADING | FLAG_LOADING_DISABLE | FLAG_REFRESHING | FLAG_FINISHED_LOADING | FLAG_PROGRESS_REFRESHING;
 
-    private static final int MASK_STATUS = 0xfffff;
-    int mFlags;
+    int mFlags;//状态
     private OnRefreshLoadListener mRefreshLoadListener;
 
 
-    int mLastDraggedScrollY;
-    static final int OVER_SCROLL_DISTANCE = 0;
-    static final int OVER_FLING_DISTANCE = 6;
-    private int mOverscrollDistance;
-    private int mOverflingDistance;
+    int mLastDraggedScrollY;//如果拦截滑动事件后，滑动状态(<0表示显示出了header，=0表示滑动距离为0，>0表示显示出了footer)
+
+
     static final float SCROLL_CONSUMED_RATIO = 0.5f;
     private static final String TAG = "MyRefreshLayout";
     OnChildScrollUpCallback mChildScrollUpCallback;
@@ -69,15 +65,28 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     private final NestedScrollingParentHelper mParentHelper;
     private final NestedScrollingChildHelper mChildHelper;
     private int mTouchSlop;
-    private int mMinimumVelocity;
-    private int mMaximumVelocity;
-//    int mCurrentTargetOffsetTop;
 
-    //    int mTotalUnconsumed;
-    private View mTarget;
-    private View mProgress;
+    private View mTarget;//当前被刷新控件，例如：RecyclerView,ListView,ScrollView,WebView
+    /**
+     * 进度条样式，支持自定义{@link #createProgress()}
+     * */
+    private View mProgress;//圆环进度条
+
+    /**
+     * 加载更多样式，自持自定义{@link #createFooterProgress()}
+     */
+
     private MyRefreshFooter2 mFooterProgress;
+
+    /**
+     * 刷新样式，自持自定义{@link #createHeaderProgress()}
+     */
     private MyRefreshHeader2 mHeaderProgress;
+
+    /**
+     * 状态图，支持空数据样式，网络异常样式，支持自定义{@link #createStatusView()}
+     * @see SimpleStatusView
+     * */
     StatusView mStatusView;
 
 
@@ -94,7 +103,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     int mTouchScrollY;
     int mUnTouchScrollY;
 
-    public static final long DELAY_CALLBACK_TIME = 500;
+    public static final long DELAY_CALLBACK_TIME = 500;//触发刷新或者加载事件后，延迟时间，为了保证能够看到动画
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -118,11 +127,11 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         setWillNotDraw(false);
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
-        mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
-        mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-        final float density = getContext().getResources().getDisplayMetrics().density;
-        mOverscrollDistance = (int) (density * OVER_SCROLL_DISTANCE);
-        mOverflingDistance = (int) (density * OVER_FLING_DISTANCE);
+
+
+        /**
+         * 创建刷新样式，加载样式，进度条刷新样式，状态样式
+         * */
         mHeaderProgress = createHeaderProgress();
         mFooterProgress = createFooterProgress();
         mProgress = createProgress();
@@ -131,6 +140,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         addView((View) mFooterProgress);
         addView((View) mStatusView);
         addView(mProgress);
+        ViewCompat.setChildrenDrawingOrderEnabled(this, true);
+
 
     }
 
@@ -143,6 +154,9 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         if (mTarget == null) {
             return;
         }
+        /**
+         * targetView默认match_parent
+         * */
         mTarget.measure(MeasureSpec.makeMeasureSpec(
                 getMeasuredWidth() - getPaddingLeft() - getPaddingRight(),
                 MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(
@@ -169,78 +183,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
     }
 
-    private void sortChildIndex() {
-        int progressIndex = -1;
-        int statusIndex = -1;
-        int headerIndex = -1;
-        int footerIndex = -1;
-        final int childCount = getChildCount();
 
-        for (int i = 0; i < childCount; ++i) {
-            final View child = getChildAt(i);
-            if (progressIndex < 0 && mProgress == child) {
-                progressIndex = i;
-            } else if (statusIndex < 0 && mStatusView == child) {
-                statusIndex = i;
-            } else if (headerIndex < 0 && mHeaderProgress == child) {
-                headerIndex = i;
-            } else if (footerIndex < 0 && mFooterProgress == child) {
-                footerIndex = i;
-            }
-        }
-
-
-        if (mChildSortedIndexes == null || mChildSortedIndexes.length != childCount) {
-            mChildSortedIndexes = new int[childCount];
-        }
-
-
-        int priority = childCount;
-        if (progressIndex >= 0) {
-            --priority;
-            mChildSortedIndexes[priority] = progressIndex;
-        }
-        if (statusIndex >= 0) {
-            --priority;
-            mChildSortedIndexes[priority] = statusIndex;
-
-        }
-        if (headerIndex >= 0) {
-            --priority;
-
-            mChildSortedIndexes[priority] = headerIndex;
-        }
-        if (footerIndex >= 0) {
-            --priority;
-            mChildSortedIndexes[priority] = footerIndex;
-        }
-
-        int start = 0;
-
-        for (int i = 0; i < priority; ++i) {
-
-            while (start < childCount) {
-                if (start != progressIndex && start != statusIndex && start != headerIndex && start != footerIndex) {
-                    mChildSortedIndexes[i] = start;
-                    ++start;
-                    break;
-                } else {
-                    ++start;
-                }
-
-            }
-
-
-        }
-
-
-    }
-
-    @Override
-    protected int getChildDrawingOrder(int childCount, int i) {
-        return mChildSortedIndexes[i];
-//        return super.getChildDrawingOrder(childCount,i);
-    }
 
 
     @Override
@@ -291,6 +234,9 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 
+        /**
+         * 如果处于嵌套滑动事件，那么不拦截事件
+         * */
         if (mNestedTouchScrollInProgress) {
             return false;
         }
@@ -302,15 +248,11 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 mActivePointerId = ev.getPointerId(0);
-//                mScroller.mScroller.computeScrollOffset();
+                /**
+                 * 如果还在反弹动画，那么直接拦截滑动事件
+                 * */
                 mIsBeingDragged = mScroller.isBackingScrolling();
-//                if (!ViewCompat.isNestedScrollingEnabled(mTarget)) {
-//                    mScroller.stop();
-//                }
 
-//                if (mIsBeingDragged) {
-//                    mLastDraggedScrollY = mScrollY;
-//                }
 
                 pointerIndex = ev.findPointerIndex(mActivePointerId);
                 if (pointerIndex < 0) {
@@ -348,13 +290,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     }
 
 
-//    public void fling(int velocityY) {
-//        mScroller.fling(velocityY);
-//    }
-//
-//    private void flingWithNestedDispatch(int velocityY) {
-//        fling(velocityY);
-//    }
 
 
     @Override
@@ -362,7 +297,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         if (mNestedTouchScrollInProgress) {
             return false;
         }
-//        Log.i("@@", "@@@@@@@@@@@:onTouchEvent");
 
         final int action = ev.getActionMasked();
         int pointerIndex = -1;
@@ -375,11 +309,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 mInitialMotionY = mInitialDownY;
                 mLastDraggedScrollY = mScrollY;
 
-//                if (mIsBeingDragged = mScroller.isBackingScrolling() || mScrollY != 0) {
-//                    mInitialMotionY = ev.getY();
-//                    mScroller.stop();
-//                    mLastDraggedScrollY = mScrollY;
-//                }
 
                 break;
 
@@ -415,29 +344,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                         mLastDraggedScrollY = mScrollY;
                     }
 
-//                    final int newScrollY = mScrollY + deltaY;
-//                    if (newScrollY < 0 && !canChildScrollUp()) {
-//                        overScrollByCompat(deltaY, mScrollY, topRange, bottomRange, 0, true);
-//                    } else if (newScrollY > 0 && !canChildScrollDown()) {
-//                        overScrollByCompat(deltaY, mScrollY, topRange, bottomRange, 0, true);
-//                    } else {
-//                        return false;
-//                    }
-//                    scrollBy(0, deltaY);
-//                    Log.i("@@", "@@@@@@@@@:delaty:" + deltaY + ",scrollY:" + mScrollY);
-//                    if (newScrollY>) {
-//                    }
-//                    overScrollByCompat(deltaY, mScrollY, topRange, bottomRange, 0, true)
-//
-////                    final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
-//////                    Log.i("@@", "@@@@@@@overscrollTop:" + overscrollTop);
-//                    if (overscrollTop > 0 && !mLoading && !canChildScrollUp()) {
-//                        moveSpinner(overscrollTop);
-//                    } else if (overscrollTop < 0 && !mRefreshing && !canChildScrollDown()) {
-//                        finishSpinnerLoading(overscrollTop);
-//                    } else {
-//                        return false;
-//                    }
                 }
                 break;
             }
@@ -466,9 +372,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     int deltaY = (int) (mInitialMotionY - y);
                     final int newScrollY = mScrollY + deltaY;
                     finishSpinner(newScrollY);
-//                    final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
-//                    mIsBeingDragged = false;
-//                    finishSpinner(overscrollTop);
+
                 }
                 mActivePointerId = INVALID_POINTER;
                 return false;
@@ -479,6 +383,9 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
         return true;
     }
+    /**
+     * 拦截触摸滑动事件
+     * */
 
     private void startDragging(float y) {
         final float yDiff = y - mInitialDownY;
@@ -506,630 +413,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
 
 
-//        if (Math.abs(yDiff) > mTouchSlop && !mIsBeingDragged) {
-//
-//        }onFinishLoading
 
     }
-
-    @Override
-    public void requestDisallowInterceptTouchEvent(boolean b) {
-        // if this is a List < L or another view that doesn't support nested
-        // scrolling, ignore this request so that the vertical scroll event
-        // isn't stolen
-        if (mOnRequestDisallowInterceptTouchEventListener != null) {
-            if (mOnRequestDisallowInterceptTouchEventListener.requestDisallowInterceptTouchEvent(b)) {
-                super.requestDisallowInterceptTouchEvent(b);
-            }
-        } else {
-            if ((android.os.Build.VERSION.SDK_INT < 21 && mTarget instanceof AbsListView)
-                    || (mTarget != null && !ViewCompat.isNestedScrollingEnabled(mTarget))) {
-                // Nope.
-            } else {
-                super.requestDisallowInterceptTouchEvent(b);
-            }
-        }
-
-
-    }
-
-    OnRequestDisallowInterceptTouchEventListener mOnRequestDisallowInterceptTouchEventListener;
-
-    public void setOnRequestDisallowInterceptTouchEventListener(OnRequestDisallowInterceptTouchEventListener requestDisallowInterceptTouchEventListener) {
-        mOnRequestDisallowInterceptTouchEventListener = requestDisallowInterceptTouchEventListener;
-    }
-
-    public interface OnRequestDisallowInterceptTouchEventListener {
-        public boolean requestDisallowInterceptTouchEvent(boolean b);
-    }
-
-    boolean overScrollByCompat(int deltaY,
-                               int scrollY, int maxOverScrollY,
-                               boolean isTouchEvent) {
-
-        final int topRange = getHeaderTop();
-        final int bottomRange = getFooterBottom();
-        return overScrollByCompat(deltaY, scrollY, topRange, bottomRange, maxOverScrollY, isTouchEvent);
-    }
-
-
-    boolean overScrollByCompat(int deltaY,
-                               int scrollY, int topRange, int bottomRange, int maxOverScrollY,
-                               boolean isTouchEvent) {
-        int newDeltaY = 0;
-        if (isTouchEvent) {
-            if (deltaY > 0) {
-                newDeltaY = (int) ((deltaY + 1) * SCROLL_CONSUMED_RATIO);
-            } else if (deltaY < 0) {
-                newDeltaY = (int) ((deltaY - 1) * SCROLL_CONSUMED_RATIO);
-            }
-
-
-        } else {
-            newDeltaY = deltaY;
-        }
-
-        int newScrollY = scrollY + newDeltaY;
-        final int top = topRange - maxOverScrollY;
-        final int bottom = bottomRange + maxOverScrollY;
-
-        boolean clampedY = false;
-        if (newScrollY > bottom) {
-            newScrollY = bottom;
-            clampedY = true;
-        } else if (newScrollY < top) {
-            newScrollY = top;
-            clampedY = true;
-        }
-        onOverScrolled(0, newScrollY, false, clampedY);
-        mHeaderProgress.onScrolling(this, newScrollY, newScrollY - scrollY, ((View) mHeaderProgress).getVisibility() == View.VISIBLE, false);
-        mFooterProgress.onScrolling(this, newScrollY, newScrollY - scrollY, ((View) mFooterProgress).getVisibility() == View.VISIBLE, false);
-
-
-        return clampedY;
-    }
-
-
-    boolean backScroll(int dy) {
-        final int old = mScrollY;
-        int newScrollY = old + dy;
-        final int topRange;
-        final int bottomRange;
-        final int maxOverScrollY;
-        topRange = Integer.MIN_VALUE;
-        bottomRange = Integer.MAX_VALUE;
-        maxOverScrollY = 0;
-        final int top = topRange - maxOverScrollY;
-        final int bottom = bottomRange + maxOverScrollY;
-
-        boolean clampedY = false;
-        if (newScrollY > bottom) {
-            newScrollY = bottom;
-            clampedY = true;
-        } else if (newScrollY < top) {
-            newScrollY = top;
-            clampedY = true;
-        }
-        onOverScrolled(0, newScrollY, false, clampedY);
-        mHeaderProgress.onScrolling(this, newScrollY, newScrollY - old, ((View) mHeaderProgress).getVisibility() == View.VISIBLE, true);
-        mFooterProgress.onScrolling(this, newScrollY, newScrollY - old, ((View) mFooterProgress).getVisibility() == View.VISIBLE, true);
-
-        return clampedY;
-    }
-
-
-    @Override
-    protected void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
-        final int newDeltaY = scrollY - mScrollY;
-//        offsetChildrenTopAndBottom(-newDeltaY);
-        offsetChildren(mTarget, -newDeltaY);
-        offsetChildren((View) mStatusView, -newDeltaY);
-//        offsetChildren(mProgress, -newDeltaY);
-        mScrollY = -mTarget.getTop();
-
-    }
-
-    final void showProgressView() {
-        final View p = mProgress;
-        p.bringToFront();
-        if (p.getVisibility() != View.VISIBLE) {
-            p.setVisibility(VISIBLE);
-        }
-    }
-
-    final void hideProgressView() {
-        final View p = mProgress;
-        if (p.getVisibility() == View.VISIBLE) {
-            p.setVisibility(GONE);
-        }
-    }
-
-    final void showRefreshingView() {
-        final View h = (View) mHeaderProgress;
-        h.bringToFront();
-        if (h.getVisibility() != View.VISIBLE) {
-            h.setVisibility(VISIBLE);
-        }
-    }
-
-    final void hideRefreshingView() {
-        final View h = (View) mHeaderProgress;
-        if (h.getVisibility() == View.VISIBLE) {
-            h.setVisibility(GONE);
-        }
-    }
-
-    final void showLoadingView() {
-        final View f = (View) mFooterProgress;
-        f.bringToFront();
-        if (f.getVisibility() != View.VISIBLE) {
-            f.setVisibility(VISIBLE);
-        }
-    }
-
-    final void hideLoadingView() {
-        final View f = (View) mFooterProgress;
-        if (f.getVisibility() == View.VISIBLE) {
-            f.setVisibility(GONE);
-        }
-    }
-
-
-    public void startProgressRefreshing() {
-        startProgressRefreshing(false);
-    }
-
-    @Override
-    public void startProgressRefreshing(boolean notify) {
-
-
-        if ((mFlags & MASK_DISALLOW_REFRESHING) == 0) {
-            mFlags |= FLAG_PROGRESS_REFRESHING;
-            hideLoadingView();
-            hideRefreshingView();
-            showProgressView();
-            hideStatusView();
-
-            if (notify) {
-                performProgressRefreshingCallback();
-            }
-
-        }
-
-    }
-
-
-    public void startRefreshing() {
-        startRefreshing(false);
-    }
-
-    public void startRefreshing(boolean notify) {
-        if ((mFlags & MASK_DISALLOW_REFRESHING) == 0) {
-            mFlags |= FLAG_REFRESHING;
-            hideLoadingView();
-            showRefreshingView();
-            hideProgressView();
-
-            if (notify) {
-                performRefreshingCallback();
-            }
-
-        }
-
-    }
-
-
-    public void startLoading() {
-        startLoading(false);
-    }
-
-    public void startLoading(boolean notify) {
-
-
-        if ((mFlags & MASK_DISALLOW_LOADING) == 0) {
-            mFlags |= FLAG_LOADING;
-            showLoadingView();
-            hideRefreshingView();
-            hideProgressView();
-
-            if (notify) {
-                performLoadingCallback();
-            }
-
-        }
-
-    }
-
-    @Override
-    public void setRefreshEnabled(boolean enabled) {
-        if (enabled) {
-            mFlags &= ~FLAG_REFRESHING_DISABLE;
-        } else {
-            mFlags |= FLAG_REFRESHING_DISABLE;
-
-        }
-    }
-
-    @Override
-    public void setLoadEnabled(boolean enabled) {
-        if (enabled) {
-            mFlags &= ~FLAG_LOADING_DISABLE;
-        } else {
-            mFlags |= FLAG_LOADING_DISABLE;
-        }
-
-    }
-
-    @Override
-    public boolean isLoading() {
-        return (mFlags & FLAG_LOADING) != 0;
-    }
-
-    @Override
-    public boolean isRefreshing() {
-        return (mFlags & FLAG_REFRESHING) != 0;
-    }
-
-    @Override
-    public boolean isProgressRefreshing() {
-        return (mFlags & FLAG_PROGRESS_REFRESHING) != 0;
-    }
-
-
-    @Override
-    public void showEmptyView() {
-        bringChildToFront((View) mStatusView);
-        mStatusView.showEmptyView();
-    }
-
-    @Override
-    public void showNetworkView() {
-        bringChildToFront((View) mStatusView);
-        mStatusView.showNetworkView();
-    }
-
-    @Override
-    public void hideStatusView() {
-        mStatusView.hideStatusView();
-    }
-
-
-    class ViewScroller implements Runnable {
-        private final OverScroller mScroller;
-        //        private boolean mTouchUpSpringBacking = false;//当前是否处于TouchUp的回弹状态
-        //        private long mLastScroll;
-        static final int ANIMATED_SCROLL_GAP = 250;
-
-        ViewScroller() {
-            mScroller = new OverScroller(getContext());
-        }
-
-
-        @Override
-        public void run() {
-
-            if (mScroller.computeScrollOffset()) {
-                final int y = mScroller.getCurrY();
-                final int oldY = mScrollY;
-
-                int dy = y - oldY;
-//                final int flingTopRange, flingBottomRange;
-//                if (dy > 0) {
-//                    flingTopRange = 0;
-//                    flingBottomRange = getScrollBottomRange();
-//                    overScrollByCompat(dy, oldY, flingTopRange, flingBottomRange, 0, false);
-//                } else if (dy < 0) {
-//                    flingTopRange = 0;
-//                    flingBottomRange = 0;
-//                    overScrollByCompat(dy, oldY, flingTopRange, flingBottomRange, 0, false);
-//
-//                }
-
-
-                if (dy != 0) {
-                    backScroll(dy);
-
-
-                }
-                ViewCompat.postOnAnimation(RefreshLayout.this, this);
-            }
-        }
-
-
-        public void stop() {
-            removeCallbacks(this);
-            final boolean finished = mScroller.isFinished();
-            if (!finished) {
-                mScroller.abortAnimation();
-            }
-
-        }
-
-        public boolean isBackingScrolling() {
-            final boolean finished = mScroller.isFinished();
-            return !finished;
-        }
-
-
-//        public void fling(int velocityY) {
-//            removeCallbacks(this);
-//            mScroller.fling(0, mScrollY, // start
-//                    0, velocityY, // velocities
-//                    0, 0, // x
-//                    Integer.MIN_VALUE, Integer.MAX_VALUE, // y
-//                    0, 0); // overscroll
-//            mTouchUpSpringBacking = false;
-//            post(this);
-//        }
-
-        public boolean springBackScrolling(int scrollY) {
-            scrollTo(scrollY);
-            return true;
-        }
-
-
-        void scrollBy(int dy) {
-            removeCallbacks(this);
-            mScroller.startScroll(0, mScrollY, 0, dy);
-            ViewCompat.postOnAnimation(RefreshLayout.this, this);
-
-        }
-
-        void scrollTo(int scrollY) {
-            scrollBy(scrollY - mScrollY);
-        }
-    }
-
-
-    protected int getHeaderTop() {
-        return -((View) mHeaderProgress).getHeight();
-    }
-
-    protected int getFooterBottom() {
-        return ((View) mFooterProgress).getHeight();
-    }
-
-
-    public void offsetChildren(View view, int offset) {
-        ViewCompat.offsetTopAndBottom(view, offset);
-    }
-
-
-    private void onSecondaryPointerUp(MotionEvent ev) {
-        final int pointerIndex = ev.getActionIndex();
-        final int pointerId = ev.getPointerId(pointerIndex);
-        if (pointerId == mActivePointerId) {
-            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-            mLastMotionY = (int) ev.getY(newPointerIndex);
-            mActivePointerId = ev.getPointerId(newPointerIndex);
-            if (mVelocityTracker != null) {
-                mVelocityTracker.clear();
-            }
-        }
-    }
-
-    private void initOrResetVelocityTracker() {
-        if (mVelocityTracker == null) {
-            mVelocityTracker = VelocityTracker.obtain();
-        } else {
-            mVelocityTracker.clear();
-        }
-    }
-
-    private void initVelocityTrackerIfNotExists() {
-        if (mVelocityTracker == null) {
-            mVelocityTracker = VelocityTracker.obtain();
-        }
-    }
-
-    private void recycleVelocityTracker() {
-        if (mVelocityTracker != null) {
-            mVelocityTracker.recycle();
-            mVelocityTracker = null;
-        }
-    }
-
-    private void endDrag() {
-        mIsBeingDragged = false;
-
-        recycleVelocityTracker();
-
-
-    }
-
-    //    @Override
-//    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-//        if (disallowIntercept) {
-//            recycleVelocityTracker();
-//        }
-//        super.requestDisallowInterceptTouchEvent(disallowIntercept);
-//    }
-    @Override
-    public void setRefreshHeader(MyRefreshHeader2 header) {
-        removeView((View) mHeaderProgress);
-        mHeaderProgress = header;
-        addView((View) mHeaderProgress);
-    }
-
-    @Override
-    public void setRefreshFooter(MyRefreshFooter2 footer) {
-        removeView((View) mFooterProgress);
-        mFooterProgress = footer;
-        addView((View) mFooterProgress);
-
-
-    }
-
-
-    protected MyRefreshFooter2 createFooterProgress() {
-        MyRefreshFooter2 v = new BaseRefreshFooterView(getContext());
-        ((View) v).setVisibility(View.GONE);
-        return v;
-    }
-
-    protected MyRefreshHeader2 createHeaderProgress() {
-        final MyRefreshHeader2 v = new BaseRefreshHeaderView2(getContext());
-        ((View) v).setVisibility(View.GONE);
-        return v;
-    }
-
-    protected View createProgress() {
-        View v = new ProgressBar(getContext());
-        v.setVisibility(GONE);
-        return v;
-    }
-
-    protected StatusView createStatusView() {
-        StatusView v = new SimpleStatusView(getContext());
-        v.hideStatusView();
-        return v;
-    }
-
-
-    private void ensureTarget() {
-        if (mTarget == null) {
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child != mFooterProgress && child != mHeaderProgress && child != mProgress && child != mStatusView) {
-                    mTarget = child;
-//                    return;
-                    break;
-                }
-            }
-        }
-        if (mTarget == null)
-            throw new NullPointerException("target view is Null");
-
-        if (mScrollTarget == null) {
-            mScrollTarget = generateScrollTarget(mTarget);
-        }
-    }
-
-    protected Scroller generateScrollTarget(View target) {
-        return new RecyclerViewScroller(target);
-    }
-
-    @Override
-    public void setNestedScrollingEnabled(boolean enabled) {
-        mChildHelper.setNestedScrollingEnabled(enabled);
-    }
-
-    @Override
-    public boolean isNestedScrollingEnabled() {
-        return mChildHelper.isNestedScrollingEnabled();
-    }
-
-
-    @Override
-    public boolean startNestedScroll(int axes) {
-        return mChildHelper.startNestedScroll(axes);
-    }
-
-
-    @Override
-    public boolean startNestedScroll(int axes, int type) {
-        return mChildHelper.startNestedScroll(axes, type);
-    }
-
-    @Override
-    public void stopNestedScroll() {
-        mChildHelper.stopNestedScroll();
-    }
-
-    @Override
-    public void stopNestedScroll(int type) {
-        mChildHelper.stopNestedScroll(type);
-    }
-
-    @Override
-    public boolean hasNestedScrollingParent() {
-        return mChildHelper.hasNestedScrollingParent();
-    }
-
-    @Override
-    public boolean hasNestedScrollingParent(int type) {
-        return mChildHelper.hasNestedScrollingParent(type);
-    }
-
-    @Override
-    public boolean dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
-                                        int dyUnconsumed, int[] offsetInWindow) {
-        return mChildHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
-                offsetInWindow);
-    }
-
-    @Override
-    public boolean dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
-                                        int dyUnconsumed, int[] offsetInWindow, int type) {
-        return mChildHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
-                offsetInWindow, type);
-    }
-
-    @Override
-    public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow) {
-        return mChildHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow);
-    }
-
-    @Override
-    public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow,
-                                           int type) {
-        return mChildHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, type);
-    }
-
-    @Override
-    public boolean dispatchNestedFling(float velocityX, float velocityY, boolean consumed) {
-        return mChildHelper.dispatchNestedFling(velocityX, velocityY, consumed);
-    }
-
-    @Override
-    public boolean dispatchNestedPreFling(float velocityX, float velocityY) {
-        return mChildHelper.dispatchNestedPreFling(velocityX, velocityY);
-    }
-
-    // NestedScrollingParent
-
-
-    @Override
-    public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int axes, int type) {
-        final boolean rlt = (axes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && !mScroller.isBackingScrolling();
-//        Log.i("MyRefreshLayout", "@@@@@@@@@@@@@" + rlt + ",type:" + type);
-
-        return rlt;
-    }
-
-
-    @Override
-    public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int axes, int type) {
-        mParentHelper.onNestedScrollAccepted(child, target, axes, type);
-        startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, type);
-        if (type == ViewCompat.TYPE_TOUCH) {
-            mNestedTouchScrollInProgress = true;
-            mScroller.stop();
-        } else {
-            mNestedNonTouchScrollInProgress = true;
-        }
-    }
-
-
-    @Override
-    public void onStopNestedScroll(@NonNull View target, int type) {
-//        Log.i("##", "############onStopNestedScroll:" + type);
-
-        mParentHelper.onStopNestedScroll(target, type);
-        if (type == ViewCompat.TYPE_TOUCH) {
-            mNestedTouchScrollInProgress = false;
-            if (/*!mNestedNonTouchScrollInProgress &&*/ mScrollY != 0) {
-                finishSpinner(mScrollY);
-            }
-
-        } else {
-            mNestedNonTouchScrollInProgress = false;
-        }
-
-
-        stopNestedScroll(type);
-    }
-
     private boolean finishSpinner(int scrollY) {
         final int topRange = Math.min(-mHeaderProgress.getOverScrollDistance(), 0);
         final int bottomRange = Math.max(mFooterProgress.getOverScrollDistance(), 0);
@@ -1265,6 +550,476 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     }
 
 
+
+    @Override
+    public void requestDisallowInterceptTouchEvent(boolean b) {
+
+        if (mOnRequestDisallowInterceptTouchEventListener != null) {
+            if (mOnRequestDisallowInterceptTouchEventListener.requestDisallowInterceptTouchEvent(b)) {
+                super.requestDisallowInterceptTouchEvent(b);
+            }
+        } else {
+            if ((android.os.Build.VERSION.SDK_INT < 21 && mTarget instanceof AbsListView)
+                    || (mTarget != null && !ViewCompat.isNestedScrollingEnabled(mTarget))) {
+                // Nope.
+            } else {
+                super.requestDisallowInterceptTouchEvent(b);
+            }
+        }
+
+
+    }
+
+    /**
+     * 自定义不允许触摸事件监听，可以在刷新其它控件（非RecyclerView、ListView、ScrollView、NestedScrollView、WebView）时，自定义事件
+     * */
+    OnRequestDisallowInterceptTouchEventListener mOnRequestDisallowInterceptTouchEventListener;
+
+    public void setOnRequestDisallowInterceptTouchEventListener(OnRequestDisallowInterceptTouchEventListener requestDisallowInterceptTouchEventListener) {
+        mOnRequestDisallowInterceptTouchEventListener = requestDisallowInterceptTouchEventListener;
+    }
+
+    public interface OnRequestDisallowInterceptTouchEventListener {
+        public boolean requestDisallowInterceptTouchEvent(boolean b);
+    }
+
+
+
+    /**
+     * 开始圆环进度条刷新（默认不回调）
+     * */
+    public void startProgressRefreshing() {
+        startProgressRefreshing(false);
+    }
+
+    @Override
+    public void startProgressRefreshing(boolean notify) {
+
+
+        if ((mFlags & MASK_DISALLOW_REFRESHING) == 0) {
+            mFlags |= FLAG_PROGRESS_REFRESHING;
+            hideLoadingView();
+            hideRefreshingView();
+            showProgressView();
+            hideStatusView();
+
+            if (notify) {
+                performProgressRefreshingCallback();
+            }
+
+        }
+
+    }
+
+    /**
+     * 开始刷新（默认不回调）
+     * */
+    public void startRefreshing() {
+        startRefreshing(false);
+    }
+
+    public void startRefreshing(boolean notify) {
+        if ((mFlags & MASK_DISALLOW_REFRESHING) == 0) {
+            mFlags |= FLAG_REFRESHING;
+            hideLoadingView();
+            showRefreshingView();
+            hideProgressView();
+
+            if (notify) {
+                performRefreshingCallback();
+            }
+
+        }
+
+    }
+
+    /**
+     * 开始加载（默认不回调）
+     * */
+    public void startLoading() {
+        startLoading(false);
+    }
+
+    public void startLoading(boolean notify) {
+
+
+        if ((mFlags & MASK_DISALLOW_LOADING) == 0) {
+            mFlags |= FLAG_LOADING;
+            showLoadingView();
+            hideRefreshingView();
+            hideProgressView();
+
+            if (notify) {
+                performLoadingCallback();
+            }
+
+        }
+
+    }
+
+    /**
+     * 设置是否可刷新
+     * */
+    @Override
+    public void setRefreshEnabled(boolean enabled) {
+        if (enabled) {
+            mFlags &= ~FLAG_REFRESHING_DISABLE;
+        } else {
+            mFlags |= FLAG_REFRESHING_DISABLE;
+
+        }
+    }
+    /**
+     * 设置是否可加载
+     * */
+    @Override
+    public void setLoadEnabled(boolean enabled) {
+        if (enabled) {
+            mFlags &= ~FLAG_LOADING_DISABLE;
+        } else {
+            mFlags |= FLAG_LOADING_DISABLE;
+        }
+
+    }
+
+
+
+    class ViewScroller implements Runnable {
+        private final OverScroller mScroller;
+        //        private boolean mTouchUpSpringBacking = false;//当前是否处于TouchUp的回弹状态
+        //        private long mLastScroll;
+        static final int ANIMATED_SCROLL_GAP = 250;
+
+        ViewScroller() {
+            mScroller = new OverScroller(getContext());
+        }
+
+
+        @Override
+        public void run() {
+
+            if (mScroller.computeScrollOffset()) {
+                final int y = mScroller.getCurrY();
+                final int oldY = mScrollY;
+
+                int dy = y - oldY;
+
+
+                if (dy != 0) {
+                    backScroll(dy);
+
+
+                }
+                ViewCompat.postOnAnimation(RefreshLayout.this, this);
+            }
+        }
+
+
+        public void stop() {
+            removeCallbacks(this);
+            final boolean finished = mScroller.isFinished();
+            if (!finished) {
+                mScroller.abortAnimation();
+            }
+
+        }
+
+        public boolean isBackingScrolling() {
+            final boolean finished = mScroller.isFinished();
+            return !finished;
+        }
+
+
+//        public void fling(int velocityY) {
+//            removeCallbacks(this);
+//            mScroller.fling(0, mScrollY, // start
+//                    0, velocityY, // velocities
+//                    0, 0, // x
+//                    Integer.MIN_VALUE, Integer.MAX_VALUE, // y
+//                    0, 0); // overscroll
+//            mTouchUpSpringBacking = false;
+//            post(this);
+//        }
+
+        public boolean springBackScrolling(int scrollY) {
+            scrollTo(scrollY);
+            return true;
+        }
+
+
+        void scrollBy(int dy) {
+            removeCallbacks(this);
+            mScroller.startScroll(0, mScrollY, 0, dy);
+            ViewCompat.postOnAnimation(RefreshLayout.this, this);
+
+        }
+
+        void scrollTo(int scrollY) {
+            scrollBy(scrollY - mScrollY);
+        }
+    }
+
+
+
+    //    @Override
+//    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+//        if (disallowIntercept) {
+//            recycleVelocityTracker();
+//        }
+//        super.requestDisallowInterceptTouchEvent(disallowIntercept);
+//    }
+
+    /**
+     * 设置刷新样式
+     * */
+    @Override
+    public void setRefreshHeader(MyRefreshHeader2 header) {
+        removeView((View) mHeaderProgress);
+        mHeaderProgress = header;
+        addView((View) mHeaderProgress);
+    }
+
+    /**
+     * 设置加载样式
+     * */
+    @Override
+    public void setRefreshFooter(MyRefreshFooter2 footer) {
+        removeView((View) mFooterProgress);
+        mFooterProgress = footer;
+        addView((View) mFooterProgress);
+
+
+    }
+
+
+    protected MyRefreshFooter2 createFooterProgress() {
+        MyRefreshFooter2 v = new BaseRefreshFooterView(getContext());
+        ((View) v).setVisibility(View.GONE);
+        return v;
+    }
+
+    protected MyRefreshHeader2 createHeaderProgress() {
+        final MyRefreshHeader2 v = new BaseRefreshHeaderView2(getContext());
+        ((View) v).setVisibility(View.GONE);
+        return v;
+    }
+
+    protected View createProgress() {
+        View v = new ProgressBar(getContext());
+        v.setVisibility(GONE);
+        return v;
+    }
+
+    protected StatusView createStatusView() {
+        StatusView v = new SimpleStatusView(getContext());
+        v.hideStatusView();
+        return v;
+    }
+
+
+    private void ensureTarget() {
+        if (mTarget == null) {
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child != mFooterProgress && child != mHeaderProgress && child != mProgress && child != mStatusView) {
+                    mTarget = child;
+//                    return;
+                    break;
+                }
+            }
+        }
+        if (mTarget == null)
+            throw new NullPointerException("target view is Null");
+
+        if (mScrollTarget == null) {
+            mScrollTarget = generateScrollTarget(mTarget);
+        }
+    }
+
+    protected Scroller generateScrollTarget(View target) {
+        return new RecyclerViewScroller(target);
+    }
+
+
+
+
+    protected int getHeaderTop() {
+        return -((View) mHeaderProgress).getHeight();
+    }
+
+    protected int getFooterBottom() {
+        return ((View) mFooterProgress).getHeight();
+    }
+
+
+    public void offsetChildren(View view, int offset) {
+        ViewCompat.offsetTopAndBottom(view, offset);
+    }
+
+
+    private void onSecondaryPointerUp(MotionEvent ev) {
+        final int pointerIndex = ev.getActionIndex();
+        final int pointerId = ev.getPointerId(pointerIndex);
+        if (pointerId == mActivePointerId) {
+            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+            mLastMotionY = (int) ev.getY(newPointerIndex);
+            mActivePointerId = ev.getPointerId(newPointerIndex);
+            if (mVelocityTracker != null) {
+                mVelocityTracker.clear();
+            }
+        }
+    }
+
+    private void initOrResetVelocityTracker() {
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        } else {
+            mVelocityTracker.clear();
+        }
+    }
+
+    private void initVelocityTrackerIfNotExists() {
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
+    }
+
+    private void recycleVelocityTracker() {
+        if (mVelocityTracker != null) {
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
+    }
+
+    private void endDrag() {
+        mIsBeingDragged = false;
+
+        recycleVelocityTracker();
+
+
+    }
+
+    @Override
+    public void setNestedScrollingEnabled(boolean enabled) {
+        mChildHelper.setNestedScrollingEnabled(enabled);
+    }
+
+    @Override
+    public boolean isNestedScrollingEnabled() {
+        return mChildHelper.isNestedScrollingEnabled();
+    }
+
+
+    @Override
+    public boolean startNestedScroll(int axes) {
+        return mChildHelper.startNestedScroll(axes);
+    }
+
+
+    @Override
+    public boolean startNestedScroll(int axes, int type) {
+        return mChildHelper.startNestedScroll(axes, type);
+    }
+
+    @Override
+    public void stopNestedScroll() {
+        mChildHelper.stopNestedScroll();
+    }
+
+    @Override
+    public void stopNestedScroll(int type) {
+        mChildHelper.stopNestedScroll(type);
+    }
+
+    @Override
+    public boolean hasNestedScrollingParent() {
+        return mChildHelper.hasNestedScrollingParent();
+    }
+
+    @Override
+    public boolean hasNestedScrollingParent(int type) {
+        return mChildHelper.hasNestedScrollingParent(type);
+    }
+
+    @Override
+    public boolean dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
+                                        int dyUnconsumed, int[] offsetInWindow) {
+        return mChildHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
+                offsetInWindow);
+    }
+
+    @Override
+    public boolean dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
+                                        int dyUnconsumed, int[] offsetInWindow, int type) {
+        return mChildHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
+                offsetInWindow, type);
+    }
+
+    @Override
+    public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow) {
+        return mChildHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow);
+    }
+
+    @Override
+    public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow,
+                                           int type) {
+        return mChildHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, type);
+    }
+
+    @Override
+    public boolean dispatchNestedFling(float velocityX, float velocityY, boolean consumed) {
+        return mChildHelper.dispatchNestedFling(velocityX, velocityY, consumed);
+    }
+
+    @Override
+    public boolean dispatchNestedPreFling(float velocityX, float velocityY) {
+        return mChildHelper.dispatchNestedPreFling(velocityX, velocityY);
+    }
+
+    // NestedScrollingParent
+
+
+    @Override
+    public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int axes, int type) {
+        final boolean rlt = (axes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && !mScroller.isBackingScrolling();
+//        Log.i("MyRefreshLayout", "@@@@@@@@@@@@@" + rlt + ",type:" + type);
+
+        return rlt;
+    }
+
+
+    @Override
+    public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int axes, int type) {
+        mParentHelper.onNestedScrollAccepted(child, target, axes, type);
+        startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, type);
+        if (type == ViewCompat.TYPE_TOUCH) {
+            mNestedTouchScrollInProgress = true;
+            mScroller.stop();
+        } else {
+            mNestedNonTouchScrollInProgress = true;
+        }
+    }
+
+
+    @Override
+    public void onStopNestedScroll(@NonNull View target, int type) {
+//        Log.i("##", "############onStopNestedScroll:" + type);
+
+        mParentHelper.onStopNestedScroll(target, type);
+        if (type == ViewCompat.TYPE_TOUCH) {
+            mNestedTouchScrollInProgress = false;
+            if (/*!mNestedNonTouchScrollInProgress &&*/ mScrollY != 0) {
+                finishSpinner(mScrollY);
+            }
+
+        } else {
+            mNestedNonTouchScrollInProgress = false;
+        }
+
+
+        stopNestedScroll(type);
+    }
+
     @Override
     public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
         dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, mScrollOffset, type);
@@ -1359,30 +1114,11 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
 
 
-////        Log.i("@@", "@@@@@@@onNestedScroll:mTotalUnconsumed:" + mTotalUnconsumed + ",dy:" + dy + ",canChildScrollUp:" + canChildScrollUp() + ",canChildScrollDown:" + canChildScrollDown());
-//
-//        if (type == ViewCompat.TYPE_TOUCH) {
-//            if (dy < 0 && !canChildScrollUp()) {
-//                mScrollY += dy;
-//                moveSpinner(mScrollY, type == ViewCompat.TYPE_TOUCH);
-//            } else if (dy > 0 && !canChildScrollDown()) {
-//                mScrollY += dy;
-//                moveSpinner(mScrollY, type == ViewCompat.TYPE_TOUCH);
-//            }
-//        } else {
-//
-//        }
+
 
 
     }
 
-
-//    private boolean moveSpinner(float overscrollTop, boolean isTouchEvent) {
-//        Log.i("@@", "##############moveSpinner:" + overscrollTop);
-//        final int oldOffsetTop = mCurrentTargetOffsetTop;
-//        final int newOffsetTop = (int) (overscrollTop * 0.5);
-//        return overScrollByCompat(newOffsetTop - oldOffsetTop, oldOffsetTop, 0, isTouchEvent);
-//    }
 
 
     @Override
@@ -1616,48 +1352,10 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     }
 
 
-    @Override
-    public int computeHorizontalScrollRange() {
-        return super.computeHorizontalScrollRange();
-    }
-
-    @Override
-    public int computeHorizontalScrollOffset() {
-        return super.computeHorizontalScrollOffset();
-    }
-
-    @Override
-    public int computeHorizontalScrollExtent() {
-        return super.computeHorizontalScrollExtent();
-    }
 
 
-    @Override
-    protected LayoutParams generateDefaultLayoutParams() {
-        return super.generateDefaultLayoutParams();
-    }
 
 
-//    @Override
-//    public int computeVerticalScrollRange() {
-//        return ((View) mHeaderProgress).getHeight() + mTarget.getHeight() + ((View) mFooterProgress).getHeight();
-//    }
-//
-//    @Override
-//    public int computeVerticalScrollOffset() {
-//        return ((View) mHeaderProgress).getHeight() + mScrollY;
-//
-//    }
-//
-//    @Override
-//    public int computeVerticalScrollExtent() {
-//        return getHeight();
-//    }
-//
-//    @Override
-//    public boolean canScrollVertically(int direction) {
-//        return super.canScrollVertically(direction);
-//    }
 
     public StatusView getStatusView() {
         return mStatusView;
@@ -1754,5 +1452,247 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     @Override
     public void setScrollTarget(Scroller scrollTarget) {
         mScrollTarget = scrollTarget;
+    }
+
+    boolean overScrollByCompat(int deltaY,
+                               int scrollY, int maxOverScrollY,
+                               boolean isTouchEvent) {
+
+        final int topRange = getHeaderTop();
+        final int bottomRange = getFooterBottom();
+        return overScrollByCompat(deltaY, scrollY, topRange, bottomRange, maxOverScrollY, isTouchEvent);
+    }
+
+
+    boolean overScrollByCompat(int deltaY,
+                               int scrollY, int topRange, int bottomRange, int maxOverScrollY,
+                               boolean isTouchEvent) {
+        int newDeltaY = 0;
+        if (isTouchEvent) {
+            if (deltaY > 0) {
+                newDeltaY = (int) ((deltaY + 1) * SCROLL_CONSUMED_RATIO);
+            } else if (deltaY < 0) {
+                newDeltaY = (int) ((deltaY - 1) * SCROLL_CONSUMED_RATIO);
+            }
+
+
+        } else {
+            newDeltaY = deltaY;
+        }
+
+        int newScrollY = scrollY + newDeltaY;
+        final int top = topRange - maxOverScrollY;
+        final int bottom = bottomRange + maxOverScrollY;
+
+        boolean clampedY = false;
+        if (newScrollY > bottom) {
+            newScrollY = bottom;
+            clampedY = true;
+        } else if (newScrollY < top) {
+            newScrollY = top;
+            clampedY = true;
+        }
+        onOverScrolled(0, newScrollY, false, clampedY);
+        mHeaderProgress.onScrolling(this, newScrollY, newScrollY - scrollY, ((View) mHeaderProgress).getVisibility() == View.VISIBLE, false);
+        mFooterProgress.onScrolling(this, newScrollY, newScrollY - scrollY, ((View) mFooterProgress).getVisibility() == View.VISIBLE, false);
+
+
+        return clampedY;
+    }
+
+
+    /**
+     * 反弹动画滑动
+     * */
+    boolean backScroll(int dy) {
+        final int old = mScrollY;
+        int newScrollY = old + dy;
+        final int topRange;
+        final int bottomRange;
+        final int maxOverScrollY;
+        topRange = Integer.MIN_VALUE;
+        bottomRange = Integer.MAX_VALUE;
+        maxOverScrollY = 0;
+        final int top = topRange - maxOverScrollY;
+        final int bottom = bottomRange + maxOverScrollY;
+
+        boolean clampedY = false;
+        if (newScrollY > bottom) {
+            newScrollY = bottom;
+            clampedY = true;
+        } else if (newScrollY < top) {
+            newScrollY = top;
+            clampedY = true;
+        }
+        onOverScrolled(0, newScrollY, false, clampedY);
+        mHeaderProgress.onScrolling(this, newScrollY, newScrollY - old, ((View) mHeaderProgress).getVisibility() == View.VISIBLE, true);
+        mFooterProgress.onScrolling(this, newScrollY, newScrollY - old, ((View) mFooterProgress).getVisibility() == View.VISIBLE, true);
+
+        return clampedY;
+    }
+
+
+    @Override
+    protected void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
+        final int newDeltaY = scrollY - mScrollY;
+//        offsetChildrenTopAndBottom(-newDeltaY);
+        offsetChildren(mTarget, -newDeltaY);
+        offsetChildren((View) mStatusView, -newDeltaY);
+//        offsetChildren(mProgress, -newDeltaY);
+        mScrollY = -mTarget.getTop();
+
+    }
+
+    @Override
+    public boolean isLoading() {
+        return (mFlags & FLAG_LOADING) != 0;
+    }
+
+    @Override
+    public boolean isRefreshing() {
+        return (mFlags & FLAG_REFRESHING) != 0;
+    }
+
+    @Override
+    public boolean isProgressRefreshing() {
+        return (mFlags & FLAG_PROGRESS_REFRESHING) != 0;
+    }
+
+
+    @Override
+    public void showEmptyView() {
+        bringChildToFront((View) mStatusView);
+        mStatusView.showEmptyView();
+    }
+
+    @Override
+    public void showNetworkView() {
+        bringChildToFront((View) mStatusView);
+        mStatusView.showNetworkView();
+    }
+
+    @Override
+    public void hideStatusView() {
+        mStatusView.hideStatusView();
+    }
+
+
+    final void showProgressView() {
+        final View p = mProgress;
+        p.bringToFront();
+        if (p.getVisibility() != View.VISIBLE) {
+            p.setVisibility(VISIBLE);
+        }
+    }
+
+    final void hideProgressView() {
+        final View p = mProgress;
+        if (p.getVisibility() == View.VISIBLE) {
+            p.setVisibility(GONE);
+        }
+    }
+
+    final void showRefreshingView() {
+        final View h = (View) mHeaderProgress;
+        h.bringToFront();
+        if (h.getVisibility() != View.VISIBLE) {
+            h.setVisibility(VISIBLE);
+        }
+    }
+
+    final void hideRefreshingView() {
+        final View h = (View) mHeaderProgress;
+        if (h.getVisibility() == View.VISIBLE) {
+            h.setVisibility(GONE);
+        }
+    }
+
+    final void showLoadingView() {
+        final View f = (View) mFooterProgress;
+        f.bringToFront();
+        if (f.getVisibility() != View.VISIBLE) {
+            f.setVisibility(VISIBLE);
+        }
+    }
+
+    final void hideLoadingView() {
+        final View f = (View) mFooterProgress;
+        if (f.getVisibility() == View.VISIBLE) {
+            f.setVisibility(GONE);
+        }
+    }
+
+
+    private void sortChildIndex() {
+        int progressIndex = -1;
+        int statusIndex = -1;
+        int headerIndex = -1;
+        int footerIndex = -1;
+        final int childCount = getChildCount();
+
+        for (int i = 0; i < childCount; ++i) {
+            final View child = getChildAt(i);
+            if (progressIndex < 0 && mProgress == child) {
+                progressIndex = i;
+            } else if (statusIndex < 0 && mStatusView == child) {
+                statusIndex = i;
+            } else if (headerIndex < 0 && mHeaderProgress == child) {
+                headerIndex = i;
+            } else if (footerIndex < 0 && mFooterProgress == child) {
+                footerIndex = i;
+            }
+        }
+
+
+        if (mChildSortedIndexes == null || mChildSortedIndexes.length != childCount) {
+            mChildSortedIndexes = new int[childCount];
+        }
+
+
+        int priority = childCount;
+        if (progressIndex >= 0) {
+            --priority;
+            mChildSortedIndexes[priority] = progressIndex;
+        }
+        if (statusIndex >= 0) {
+            --priority;
+            mChildSortedIndexes[priority] = statusIndex;
+
+        }
+        if (headerIndex >= 0) {
+            --priority;
+
+            mChildSortedIndexes[priority] = headerIndex;
+        }
+        if (footerIndex >= 0) {
+            --priority;
+            mChildSortedIndexes[priority] = footerIndex;
+        }
+
+        int start = 0;
+
+        for (int i = 0; i < priority; ++i) {
+
+            while (start < childCount) {
+                if (start != progressIndex && start != statusIndex && start != headerIndex && start != footerIndex) {
+                    mChildSortedIndexes[i] = start;
+                    ++start;
+                    break;
+                } else {
+                    ++start;
+                }
+
+            }
+
+
+        }
+
+
+    }
+
+    @Override
+    protected int getChildDrawingOrder(int childCount, int i) {
+        return mChildSortedIndexes[i];
+//        return super.getChildDrawingOrder(childCount,i);
     }
 }

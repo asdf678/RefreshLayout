@@ -9,6 +9,9 @@ import tzy.refreshlayout.Scroller;
 public class RecyclerViewScroller implements Scroller<RecyclerView> {
     final RecyclerView mRecyclerView;
 
+    /**
+     * 适配了RecyclerView
+     */
 
     public RecyclerViewScroller(View target) {
         mRecyclerView = target instanceof RecyclerView && ViewCompat.isNestedScrollingEnabled(target) ? (RecyclerView) target : null;
@@ -19,6 +22,9 @@ public class RecyclerViewScroller implements Scroller<RecyclerView> {
         return mRecyclerView;
     }
 
+    /**
+     * RecyclerView滑动相应距离
+     */
     @Override
     public void scrollBy(int dy) {
         if (mRecyclerView != null) {
@@ -26,13 +32,15 @@ public class RecyclerViewScroller implements Scroller<RecyclerView> {
         }
     }
 
+    /**
+     * RecyclerView停止滑动动画
+     */
     @Override
     public void stopNestedScroll() {
         if (mRecyclerView != null) {
             mRecyclerView.stopScroll();
         }
     }
-
 
 
     @Override
