@@ -1274,12 +1274,20 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 mScroller.springBackScrolling(0);
             } else {
 //                offsetChildren(mTarget);
+                /*
+                * 在结束刷新或加载之前，可能又拖动了，这时候是会滑动反弹回来，这时候需要关闭这个滑动反弹动画，才能执行下面的backScroll
+                * */
+                mScroller.stop();
                 backScroll(-mScrollY);
             }
         } else if (status == FLAG_LOADING && mScrollY > 0) {
             if (smoothScroll) {
                 mScroller.springBackScrolling(0);
             } else {
+                /*
+                * 在结束刷新或加载之前，可能又拖动了，这时候是会滑动反弹回来，这时候需要关闭这个滑动反弹动画，才能执行下面的backScroll
+                * */
+                mScroller.stop();
                 backScroll(-mScrollY);
             }
         }
