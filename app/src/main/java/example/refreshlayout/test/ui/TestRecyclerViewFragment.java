@@ -3,14 +3,16 @@ package example.refreshlayout.test.ui;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,18 +58,18 @@ public class TestRecyclerViewFragment extends Fragment implements Handler.Callba
         mMyRefreshLayout.setOnRefreshLoadListener(new OnRefreshLoadListener() {
             @Override
             public void onProgressRefresh(RefreshLayout view) {
-                mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);
+                mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 500);
             }
 
             @Override
             public void onRefresh(RefreshLayout view) {
-                mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 1000);
+                mHandler.sendEmptyMessageDelayed(MSG_REFRESH, 500);
 
             }
 
             @Override
             public void onLoading(RefreshLayout view) {
-                mHandler.sendEmptyMessageDelayed(MSG_LOAD, 1000);
+                mHandler.sendEmptyMessageDelayed(MSG_LOAD, 500);
 
             }
         });

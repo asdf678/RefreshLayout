@@ -1,8 +1,9 @@
 package example.refreshlayout.style.ui;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.View;
+
+import androidx.annotation.Nullable;
 
 import example.refreshlayout.test.ui.TestRecyclerViewFragment;
 import tzy.refreshlayout.header.MyRefreshHeaderView2;

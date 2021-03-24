@@ -1,8 +1,10 @@
 package example.refreshlayout;
 
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+
 import android.os.Bundle;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 
 import example.refreshlayout.style.StyleFragment;
 import example.refreshlayout.style.ui.StyleBaseFragment;
