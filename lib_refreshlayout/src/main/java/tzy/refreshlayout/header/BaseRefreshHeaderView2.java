@@ -45,7 +45,6 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
         init();
     }
 
-
     private TextView mTextView;
 
     private void init() {
@@ -60,13 +59,10 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
         setGravity(Gravity.CENTER);
     }
 
-
     @Override
     public boolean onMeasure(RefreshLayout parent, int parentWidthMeasureSpec, int parentHeightMeasureSpec) {
-
         measure(MeasureSpec.makeMeasureSpec(parent.getMeasuredWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(parent.getMeasuredHeight() - parent.getPaddingTop() - parent.getPaddingBottom(), MeasureSpec.AT_MOST));
-
         return true;
     }
 
@@ -93,9 +89,6 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
         return false;
     }
 
-
-
-
     @Override
     public int getOverScrollDistance() {
         return getMeasuredHeight();
@@ -104,7 +97,6 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
     @Override
     public void onRefreshingAccepted(int distance, int overScrollRange, int type) {
         mTextView.setText("正在刷新...");
-
     }
 
     @Override
@@ -113,18 +105,12 @@ public class BaseRefreshHeaderView2 extends LinearLayout implements MyRefreshHea
             mTextView.setText("下拉后刷新");
         } else if (type == RefreshLayout.REFRESH_TYPE_SCROLLING) {
             mTextView.setText("松开后刷新");
-
         }
-
-
     }
-
 
     @Override
     public boolean onFinishRefreshing(Scroller scrollTarget, int distance) {
         mTextView.setText("刷新完成");
-
         return false;
     }
-
 }

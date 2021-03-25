@@ -43,11 +43,8 @@ public class RecyclerViewScroller implements Scroller<RecyclerView> {
         }
     }
 
-
     @Override
     public boolean isScrollSupported() {
         return mRecyclerView != null;
     }
-
-
 }

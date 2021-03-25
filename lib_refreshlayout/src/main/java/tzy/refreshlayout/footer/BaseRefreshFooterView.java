@@ -85,14 +85,12 @@ public class BaseRefreshFooterView extends LinearLayout implements MyRefreshFoot
     @Override
     public void onLoadingAccepted(int distance, int overScrollRange, int type) {
         mTextView.setText("正在加载......");
-
     }
 
     @Override
     public void onLoadingNotAccepted(int distance, int overScrollRange, int type) {
         mTextView.setText("上滑加载更多.....");
     }
-
 
     @Override
     public boolean onStartLoading(Scroller scrollTarget, int distance, int overScrollRange, int type) {
@@ -104,18 +102,15 @@ public class BaseRefreshFooterView extends LinearLayout implements MyRefreshFoot
         }
     }
 
-
     @Override
     public int getOverScrollDistance() {
         return getMeasuredHeight();
     }
 
-
 //    @Override
 //    public boolean onStartLoading(int distance) {
 //        return false;
 //    }
-
 
     @Override
     public boolean onFinishLoading(Scroller scrollTarget, int distance) {
@@ -129,8 +124,5 @@ public class BaseRefreshFooterView extends LinearLayout implements MyRefreshFoot
         } else {
             return false;
         }
-
     }
-
-
 }

@@ -7,7 +7,6 @@ public interface RefreshView {
 
     void setRefreshEnabled(boolean enabled);
 
-
     void setLoadEnabled(boolean enabled);
 
     void stopRefreshing();

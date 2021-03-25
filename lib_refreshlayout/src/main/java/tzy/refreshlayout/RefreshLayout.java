@@ -55,9 +55,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     int mFlags;//状态
     private OnRefreshLoadListener mRefreshLoadListener;
 
-
     int mLastDraggedScrollY;//如果拦截滑动事件后，滑动状态(<0表示显示出了header，=0表示滑动距离为0，>0表示显示出了footer)
-
 
     static final float SCROLL_CONSUMED_RATIO = 0.5f;
     private static final String TAG = "MyRefreshLayout";
@@ -89,7 +87,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
      * @see SimpleStatusView
      * */
     StatusView mStatusView;
-
 
     private int[] mChildSortedIndexes;
 
@@ -129,7 +126,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
 
-
         /**
          * 创建刷新样式，加载样式，进度条刷新样式，状态样式
          * */
@@ -142,8 +138,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         addView((View) mStatusView);
         addView(mProgress);
         ViewCompat.setChildrenDrawingOrderEnabled(this, true);
-
-
     }
 
     @Override
@@ -179,18 +173,11 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(
                 getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.AT_MOST));
 
-
         sortChildIndex();
-
     }
-
-
-
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-
-
         ensureTarget();
         final View child = mTarget;
         final int childLeft = getPaddingLeft();
@@ -198,7 +185,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         final int childWidth = getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
         final int childHeight = getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
         child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
-
 
         if (!mHeaderProgress.onLayout(this, mScrollY, childLeft, childTop, childLeft + childWidth, childTop + childHeight, childWidth, childHeight)) {
             final View headerView = (View) mHeaderProgress;
@@ -218,8 +204,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
         ((View) mStatusView).layout(childLeft, childTop, childLeft + ((View) mStatusView).getMeasuredWidth(), childTop + ((View) mStatusView).getMeasuredHeight());
         mProgress.layout((getMeasuredWidth() - mProgress.getMeasuredWidth()) / 2, (getMeasuredHeight() - mProgress.getMeasuredHeight()) / 2, (getMeasuredWidth() + mProgress.getMeasuredWidth()) / 2, (getMeasuredHeight() + mProgress.getMeasuredHeight()) / 2);
-
-
     }
 
     private static final int INVALID_POINTER = -1;
@@ -227,8 +211,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     private int mActivePointerId = INVALID_POINTER;
     private int mLastMotionY;
     private VelocityTracker mVelocityTracker;
-
-
     private float mInitialMotionY;
     private float mInitialDownY;
 
@@ -253,7 +235,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                  * 如果还在反弹动画，那么直接拦截滑动事件
                  * */
                 mIsBeingDragged = mScroller.isBackingScrolling();
-
 
                 pointerIndex = ev.findPointerIndex(mActivePointerId);
                 if (pointerIndex < 0) {
@@ -285,13 +266,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 mActivePointerId = INVALID_POINTER;
                 break;
         }
-
         return mIsBeingDragged;
-
     }
-
-
-
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
@@ -309,8 +285,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 mScroller.stop();
                 mInitialMotionY = mInitialDownY;
                 mLastDraggedScrollY = mScrollY;
-
-
                 break;
 
             case MotionEvent.ACTION_MOVE: {
@@ -344,14 +318,12 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     if (mLastDraggedScrollY == 0) {
                         mLastDraggedScrollY = mScrollY;
                     }
-
                 }
                 break;
             }
             case MotionEvent.ACTION_POINTER_DOWN: {
                 pointerIndex = ev.getActionIndex();
                 if (pointerIndex < 0) {
-
                     return false;
                 }
                 mActivePointerId = ev.getPointerId(pointerIndex);
@@ -373,7 +345,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     int deltaY = (int) (mInitialMotionY - y);
                     final int newScrollY = mScrollY + deltaY;
                     finishSpinner(newScrollY);
-
                 }
                 mActivePointerId = INVALID_POINTER;
                 return false;
@@ -381,7 +352,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             case MotionEvent.ACTION_CANCEL:
                 return false;
         }
-
         return true;
     }
     /**
@@ -412,9 +382,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 mInitialDownY = y;
             }
         }
-
-
-
     }
     private boolean finishSpinner(int scrollY) {
         final int topRange = Math.min(-mHeaderProgress.getOverScrollDistance(), 0);
@@ -445,16 +412,12 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                         return true;
                     }
                     showRefreshingView();
-
                     break;
                 default:
                     mScroller.springBackScrolling(0);
                     hideRefreshingView();
                     return true;
-
             }
-
-
         } else if (scrollY > 0) {
             switch (mFlags & MASK_DISALLOW_LOADING) {
                 case 0:
@@ -480,19 +443,13 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                         return true;
                     }
                     showLoadingView();
-
                     break;
                 default:
                     mScroller.springBackScrolling(0);
                     hideLoadingView();
                     return true;
-
             }
-
-
         }
-
-
         return false;
     }
 
@@ -518,11 +475,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     break;
                 default:
                     hideRefreshingView();
-
                     break;
             }
-
-
         } else if (scrollY > 0) {
             switch (mFlags & MASK_DISALLOW_LOADING) {
                 case 0:
@@ -532,7 +486,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                         performLoadingCallback();
                     } else {
                         mFooterProgress.onLoadingNotAccepted(scrollY, bottomRange, REFRESH_TYPE_SCROLLING);
-
                     }
                     showLoadingView();
                     hideRefreshingView();
@@ -542,19 +495,13 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     break;
                 default:
                     hideLoadingView();
-
                     break;
             }
-
         }
-
     }
-
-
 
     @Override
     public void requestDisallowInterceptTouchEvent(boolean b) {
-
         if (mOnRequestDisallowInterceptTouchEventListener != null) {
             if (mOnRequestDisallowInterceptTouchEventListener.requestDisallowInterceptTouchEvent(b)) {
                 super.requestDisallowInterceptTouchEvent(b);
@@ -567,8 +514,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 super.requestDisallowInterceptTouchEvent(b);
             }
         }
-
-
     }
 
     /**
@@ -584,8 +529,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         public boolean requestDisallowInterceptTouchEvent(boolean b);
     }
 
-
-
     /**
      * 开始圆环进度条刷新（默认不回调）
      * */
@@ -595,8 +538,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
     @Override
     public void startProgressRefreshing(boolean notify) {
-
-
         if ((mFlags & MASK_DISALLOW_REFRESHING) == 0) {
             mFlags |= FLAG_PROGRESS_REFRESHING;
             hideLoadingView();
@@ -607,9 +548,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             if (notify) {
                 performProgressRefreshingCallback();
             }
-
         }
-
     }
 
     /**
@@ -629,9 +568,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             if (notify) {
                 performRefreshingCallback();
             }
-
         }
-
     }
 
     /**
@@ -642,8 +579,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     }
 
     public void startLoading(boolean notify) {
-
-
         if ((mFlags & MASK_DISALLOW_LOADING) == 0) {
             mFlags |= FLAG_LOADING;
             showLoadingView();
@@ -653,9 +588,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             if (notify) {
                 performLoadingCallback();
             }
-
         }
-
     }
 
     /**
@@ -667,7 +600,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             mFlags &= ~FLAG_REFRESHING_DISABLE;
         } else {
             mFlags |= FLAG_REFRESHING_DISABLE;
-
         }
     }
     /**
@@ -683,8 +615,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
     }
 
-
-
     class ViewScroller implements Runnable {
         private final OverScroller mScroller;
         //        private boolean mTouchUpSpringBacking = false;//当前是否处于TouchUp的回弹状态
@@ -695,7 +625,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             mScroller = new OverScroller(getContext());
         }
 
-
         @Override
         public void run() {
 
@@ -704,17 +633,12 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 final int oldY = mScrollY;
 
                 int dy = y - oldY;
-
-
                 if (dy != 0) {
                     backScroll(dy);
-
-
                 }
                 ViewCompat.postOnAnimation(RefreshLayout.this, this);
             }
         }
-
 
         public void stop() {
             removeCallbacks(this);
@@ -722,14 +646,12 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             if (!finished) {
                 mScroller.abortAnimation();
             }
-
         }
 
         public boolean isBackingScrolling() {
             final boolean finished = mScroller.isFinished();
             return !finished;
         }
-
 
 //        public void fling(int velocityY) {
 //            removeCallbacks(this);
@@ -747,20 +669,16 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             return true;
         }
 
-
         void scrollBy(int dy) {
             removeCallbacks(this);
             mScroller.startScroll(0, mScrollY, 0, dy);
             ViewCompat.postOnAnimation(RefreshLayout.this, this);
-
         }
 
         void scrollTo(int scrollY) {
             scrollBy(scrollY - mScrollY);
         }
     }
-
-
 
     //    @Override
 //    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
@@ -788,8 +706,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         removeView((View) mFooterProgress);
         mFooterProgress = footer;
         addView((View) mFooterProgress);
-
-
     }
 
 
@@ -817,7 +733,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         return v;
     }
 
-
     private void ensureTarget() {
         if (mTarget == null) {
             for (int i = 0; i < getChildCount(); i++) {
@@ -841,9 +756,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         return new RecyclerViewScroller(target);
     }
 
-
-
-
     protected int getHeaderTop() {
         return -((View) mHeaderProgress).getHeight();
     }
@@ -856,7 +768,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     public void offsetChildren(View view, int offset) {
         ViewCompat.offsetTopAndBottom(view, offset);
     }
-
 
     private void onSecondaryPointerUp(MotionEvent ev) {
         final int pointerIndex = ev.getActionIndex();
@@ -894,10 +805,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
     private void endDrag() {
         mIsBeingDragged = false;
-
         recycleVelocityTracker();
-
-
     }
 
     @Override
@@ -979,15 +887,12 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 
     // NestedScrollingParent
 
-
     @Override
     public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int axes, int type) {
         final boolean rlt = (axes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && !mScroller.isBackingScrolling();
 //        Log.i("MyRefreshLayout", "@@@@@@@@@@@@@" + rlt + ",type:" + type);
-
         return rlt;
     }
-
 
     @Override
     public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int axes, int type) {
@@ -1001,23 +906,18 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
     }
 
-
     @Override
     public void onStopNestedScroll(@NonNull View target, int type) {
 //        Log.i("##", "############onStopNestedScroll:" + type);
-
         mParentHelper.onStopNestedScroll(target, type);
         if (type == ViewCompat.TYPE_TOUCH) {
             mNestedTouchScrollInProgress = false;
             if (/*!mNestedNonTouchScrollInProgress &&*/ mScrollY != 0) {
                 finishSpinner(mScrollY);
             }
-
         } else {
             mNestedNonTouchScrollInProgress = false;
         }
-
-
         stopNestedScroll(type);
     }
 
@@ -1028,7 +928,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 //        Log.i("##", "#######onNestedScroll:dyConsumed:" + dyConsumed + ",dyUnconsumed:" + dyUnconsumed);
 //        overScrollByCompat(dy, mScrollY, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, true);
         final int scrollY = mScrollY;
-
 
         if (type == ViewCompat.TYPE_TOUCH) {
 //            Log.i("##", "#######Nested:" + dy);
@@ -1043,8 +942,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 if (scrollY != mScrollY) {
                     moveSpinner(mScrollY);
                 }
-
-
             } else if (scrollY >= 0 && dy > 0 && !canChildScrollDown()) {
                 topRange = 0;
                 bottomRange = Integer.MAX_VALUE;
@@ -1054,12 +951,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     moveSpinner(mScrollY);
                 }
             }
-
-
         } else if (!mScroller.isBackingScrolling()) {
 //            Log.i("##", "#######Nested");
-
-
             if (scrollY <= 0 && dy < 0 && !canChildScrollUp()) {
                 int topRange = Math.min(-mHeaderProgress.getOverScrollDistance(), 0);
                 final int bottomRange = 0;
@@ -1072,15 +965,11 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                         break;
                     case FLAG_REFRESHING:
 
-
                         break;
                     default:
                         topRange = 0;
                         break;
-
                 }
-
-
                 overScrollByCompat(dy, scrollY, topRange, bottomRange, 0, false);
                 if (scrollY != mScrollY) {
                     moveSpinner(mScrollY);
@@ -1101,26 +990,15 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     default:
                         bottomRange = 0;
                         break;
-
                 }
-
 
                 overScrollByCompat(dy, scrollY, topRange, bottomRange, 0, false);
                 if (scrollY != mScrollY) {
                     moveSpinner(mScrollY);
                 }
             }
-
-
         }
-
-
-
-
-
     }
-
-
 
     @Override
     public void onNestedPreScroll(@NonNull View target, int dx, int dy, @Nullable int[] consumed, int type) {
@@ -1131,8 +1009,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             final int unconsumedY = -scrollY;
             final int topRange;
             final int bottomRange;
-
-
             final int consumedY;
             if (dy > 0 && unconsumedY > 0) {
                 topRange = Integer.MIN_VALUE;
@@ -1143,14 +1019,11 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     consumedY = dy;
                 }
 //                Log.i("##", "#######NestedPre");
-
-
                 overScrollByCompat(consumedY, scrollY, topRange, bottomRange, 0, true);
                 if (scrollY != mScrollY) {
                     moveSpinner(mScrollY);
                 }
                 consumed[1] = (mScrollY - scrollY) != 0 ? consumedY : 0;
-
             } else if (dy < 0 && unconsumedY < 0) {
                 topRange = 0;
                 bottomRange = Integer.MAX_VALUE;
@@ -1171,8 +1044,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             final int unconsumedY = -scrollY;
             final int topRange;
             final int bottomRange;
-
-
             final int consumedY;
             if (dy > 0 && unconsumedY > 0) {
                 topRange = Math.min(-mHeaderProgress.getOverScrollDistance(), 0);
@@ -1203,7 +1074,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                     moveSpinner(mScrollY);
                 }
                 consumed[1] = mScrollY - scrollY;
-
             }
         }
 
@@ -1213,7 +1083,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             consumed[1] += parentConsumed[1];
         }
 //        Log.i("##", "#######onNestedPreScroll:dy:" + dy + ",dyconsumed:" + consumed[1]);
-
     }
 
     @Override
@@ -1229,8 +1098,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         final int bottomRange;
         if ((mFlags & FLAG_REFRESHING) != 0) {
             topRange = Math.min(-mHeaderProgress.getOverScrollDistance(), 0);
-
-
         } else {
             topRange = 0;
         }
@@ -1244,7 +1111,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
 //            Log.i("@@", "@@@@@@@@@@@@:dispatch onNestedPreFling");
             return true;
         }
-
         return dispatchNestedPreFling(velocityX, velocityY);
     }
 
@@ -1311,7 +1177,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             mFlags ^= FLAG_PROGRESS_REFRESHING;
             resetProgressRefresh();
         }
-
     }
 
     public void finishedRefreshing() {
@@ -1324,7 +1189,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             mFlags |= FLAG_FINISHED_LOADING;
         } else {
             mFlags &= ~FLAG_FINISHED_LOADING;
-
         }
     }
 
@@ -1333,7 +1197,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             mFlags |= FLAG_FINISHED_REFRESHING;
         } else {
             mFlags &= ~FLAG_FINISHED_REFRESHING;
-
         }
     }
 
@@ -1348,7 +1211,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     public void finishedLoading() {
         mFlags |= FLAG_FINISHED_LOADING;
         stopLoading();
-
     }
 
     @Override
@@ -1359,12 +1221,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             resetLoading();
         }
     }
-
-
-
-
-
-
 
     public StatusView getStatusView() {
         return mStatusView;
@@ -1409,7 +1265,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     private void performLoadingCallback() {
         if (mRefreshLoadListener != null) {
             ViewCompat.postOnAnimationDelayed(this, mLoadingCallbackRunnable, DELAY_CALLBACK_TIME);
-
         }
     }
 
@@ -1420,11 +1275,9 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
     };
 
-
     private void performRefreshingCallback() {
         if (mRefreshLoadListener != null) {
             ViewCompat.postOnAnimationDelayed(this, mRefreshCallbackRunnable, DELAY_CALLBACK_TIME);
-
         }
     }
 
@@ -1432,7 +1285,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         @Override
         public void run() {
             mRefreshLoadListener.onRefresh(RefreshLayout.this);
-
         }
     };
 
@@ -1449,12 +1301,10 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
     };
 
-
     @Override
     public void setOnRefreshLoadListener(OnRefreshLoadListener listener) {
         mRefreshLoadListener = listener;
     }
-
 
     private Scroller mScrollTarget;
 
@@ -1466,12 +1316,10 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     boolean overScrollByCompat(int deltaY,
                                int scrollY, int maxOverScrollY,
                                boolean isTouchEvent) {
-
         final int topRange = getHeaderTop();
         final int bottomRange = getFooterBottom();
         return overScrollByCompat(deltaY, scrollY, topRange, bottomRange, maxOverScrollY, isTouchEvent);
     }
-
 
     boolean overScrollByCompat(int deltaY,
                                int scrollY, int topRange, int bottomRange, int maxOverScrollY,
@@ -1483,12 +1331,9 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             } else if (deltaY < 0) {
                 newDeltaY = (int) ((deltaY - 1) * SCROLL_CONSUMED_RATIO);
             }
-
-
         } else {
             newDeltaY = deltaY;
         }
-
         int newScrollY = scrollY + newDeltaY;
         final int top = topRange - maxOverScrollY;
         final int bottom = bottomRange + maxOverScrollY;
@@ -1504,11 +1349,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         onOverScrolled(0, newScrollY, false, clampedY);
         mHeaderProgress.onScrolling(this, newScrollY, newScrollY - scrollY, ((View) mHeaderProgress).getVisibility() == View.VISIBLE, false);
         mFooterProgress.onScrolling(this, newScrollY, newScrollY - scrollY, ((View) mFooterProgress).getVisibility() == View.VISIBLE, false);
-
-
         return clampedY;
     }
-
 
     /**
      * 反弹动画滑动
@@ -1540,7 +1382,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         return clampedY;
     }
 
-
     @Override
     protected void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
         final int newDeltaY = scrollY - mScrollY;
@@ -1549,7 +1390,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         offsetChildren((View) mStatusView, -newDeltaY);
 //        offsetChildren(mProgress, -newDeltaY);
         mScrollY = -mTarget.getTop();
-
     }
 
     @Override
@@ -1567,7 +1407,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         return (mFlags & FLAG_PROGRESS_REFRESHING) != 0;
     }
 
-
     @Override
     public void showEmptyView() {
         bringChildToFront((View) mStatusView);
@@ -1584,7 +1423,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
     public void hideStatusView() {
         mStatusView.hideStatusView();
     }
-
 
     final void showProgressView() {
         final View p = mProgress;
@@ -1631,7 +1469,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
     }
 
-
     private void sortChildIndex() {
         int progressIndex = -1;
         int statusIndex = -1;
@@ -1652,11 +1489,9 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
             }
         }
 
-
         if (mChildSortedIndexes == null || mChildSortedIndexes.length != childCount) {
             mChildSortedIndexes = new int[childCount];
         }
-
 
         int priority = childCount;
         if (progressIndex >= 0) {
@@ -1670,7 +1505,6 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
         if (headerIndex >= 0) {
             --priority;
-
             mChildSortedIndexes[priority] = headerIndex;
         }
         if (footerIndex >= 0) {
@@ -1679,9 +1513,7 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
         }
 
         int start = 0;
-
         for (int i = 0; i < priority; ++i) {
-
             while (start < childCount) {
                 if (start != progressIndex && start != statusIndex && start != headerIndex && start != footerIndex) {
                     mChildSortedIndexes[i] = start;
@@ -1690,13 +1522,8 @@ public class RefreshLayout extends ViewGroup implements NestedScrollingParent2, 
                 } else {
                     ++start;
                 }
-
             }
-
-
         }
-
-
     }
 
     @Override

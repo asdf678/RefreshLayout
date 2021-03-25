@@ -12,7 +12,6 @@ import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 
 public class MyDrawable extends BitmapDrawable implements Animatable {
-
     float mRotation;
 
     public MyDrawable(Resources res, Bitmap bitmap) {
@@ -80,7 +79,6 @@ public class MyDrawable extends BitmapDrawable implements Animatable {
             public void onAnimationStart(Animator animator) {
                 mRotationCount = 0;
 //                Log.i("@@", "@@@@onAnimationStart");
-
             }
 
             @Override
@@ -100,7 +98,6 @@ public class MyDrawable extends BitmapDrawable implements Animatable {
             @Override
             public void onAnimationRepeat(Animator animator) {
 //                Log.i("@@", "@@@@onAnimationRepeat");
-
 
                 if (mFinishing) {
 

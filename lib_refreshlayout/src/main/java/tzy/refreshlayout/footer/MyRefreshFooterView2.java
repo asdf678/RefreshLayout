@@ -59,7 +59,6 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
         setGravity(Gravity.CENTER);
     }
 
-
     @Override
     public boolean onMeasure(RefreshLayout parent, int parentWidthMeasureSpec, int parentHeightMeasureSpec) {
         measure(MeasureSpec.makeMeasureSpec(parent.getMeasuredWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), MeasureSpec.EXACTLY),
@@ -85,7 +84,6 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
     @Override
     public void onLoadingAccepted(int distance, int overScrollRange, int type) {
         mTextView.setText("正在加载......");
-
     }
 
     @Override
@@ -95,16 +93,12 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
 
     @Override
     public boolean onStartLoading(Scroller scrollTarget, int distance, int overScrollRange, int type) {
-
         if (scrollTarget.isScrollSupported()) {
             return distance > 0 && type == RefreshLayout.REFRESH_TYPE_SCROLLING;
-
         } else {
             return distance >= overScrollRange && type == RefreshLayout.REFRESH_TYPE_TOUCH_UP;
         }
-
     }
-
 
     @Override
     public int getOverScrollDistance() {
@@ -126,11 +120,8 @@ public class MyRefreshFooterView2 extends LinearLayout implements MyRefreshFoote
         }
     }
 
-
 //    @Override
 //    public boolean onStartLoading(int distance) {
 //        return false;
 //    }
-
-
 }

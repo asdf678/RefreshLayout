@@ -64,15 +64,11 @@ public class SimpleStatusView extends FrameLayout implements StatusView {
 
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
-
         mEmptyView = inflater.inflate(emptyLayoutId, this, false);
         addAndSetView(mEmptyView, oldEmptyVisible, gravity);
 
-
         mNetWorkView = inflater.inflate(netWorkLayoutId, this, false);
         addAndSetView(mNetWorkView, oldNetworkVisible, gravity);
-
-
     }
 
     public void setEmptyImageResource(int resId) {
@@ -81,7 +77,6 @@ public class SimpleStatusView extends FrameLayout implements StatusView {
 
     public ImageView getEmptyImageView() {
         return mEmptyView.findViewById(R.id.status_empty_ic);
-
     }
 
     public void setEmptyText(String text) {
@@ -94,7 +89,6 @@ public class SimpleStatusView extends FrameLayout implements StatusView {
 
     public void setEmptyTextSize(float size) {
         getEmptyTextView().setTextSize(size);
-
     }
 
     public TextView getEmptyTextView() {
@@ -107,7 +101,6 @@ public class SimpleStatusView extends FrameLayout implements StatusView {
 
     public ImageView getNetworkImageView() {
         return mNetWorkView.findViewById(R.id.status_network_ic);
-
     }
 
     public void setNetworkText(String text) {
@@ -126,13 +119,11 @@ public class SimpleStatusView extends FrameLayout implements StatusView {
         return mNetWorkView.findViewById(R.id.status_network_text);
     }
 
-
     void addAndSetView(View view, int visible, int gravity) {
         view.setVisibility(visible);
         ((LayoutParams) view.getLayoutParams()).gravity = gravity;
         addView(view);
     }
-
 
     private void clearChildViews() {
         removeAllViews();
@@ -140,12 +131,9 @@ public class SimpleStatusView extends FrameLayout implements StatusView {
         mNetWorkView = null;
     }
 
-
     static void setViewVisible(View view, int visible) {
         if (view.getVisibility() != visible) {
             view.setVisibility(visible);
         }
     }
-
-
 }

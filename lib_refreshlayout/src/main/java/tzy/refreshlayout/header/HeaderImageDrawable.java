@@ -16,7 +16,6 @@ public class HeaderImageDrawable extends BitmapDrawable {
         return mRotation;
     }
 
-
     @Override
     public void draw(Canvas canvas) {
         final Rect bounds = getBounds();

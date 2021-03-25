@@ -108,17 +108,13 @@ public class MyRefreshHeaderView2 extends LinearLayout implements MyRefreshHeade
         }
 //        Log.i("@@", "@@@@@@:distance" + distance);
 
-
         if (backScrolling) {
             if (!parent.isRefreshing()) {
                 onNotRefreshingBackScrolling();
             } else {
                 onRefreshingBackScrolling();
             }
-
         }
-
-
     }
 
     @Override
@@ -137,7 +133,6 @@ public class MyRefreshHeaderView2 extends LinearLayout implements MyRefreshHeade
 
     }
 
-
     @Override
     public int getOverScrollDistance() {
         return getMeasuredHeight();
@@ -147,7 +142,6 @@ public class MyRefreshHeaderView2 extends LinearLayout implements MyRefreshHeade
     public void onRefreshingAccepted(int distance, int overScrollRange, int type) {
 //        mTextView.setText("正在刷新...");
         mDrawable.start();
-
     }
 
     @Override
@@ -156,18 +150,13 @@ public class MyRefreshHeaderView2 extends LinearLayout implements MyRefreshHeade
 //            mTextView.setText("下拉后刷新");
         } else if (type == RefreshLayout.REFRESH_TYPE_SCROLLING) {
 //            mTextView.setText("松开后刷新");
-
         }
-
-
     }
-
 
     @Override
     public boolean onFinishRefreshing(Scroller scrollTarget, int distance) {
         //        mTextView.setText("刷新完成");
         mDrawable.stop();
         return false;
-
     }
 }
